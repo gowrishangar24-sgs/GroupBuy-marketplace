@@ -1,0 +1,31 @@
+cat << 'EOF' > .gitignore
+# ── INTERNAL SECRETS ──
+.env
+.env.local
+.env.production
+*.env
+config/local.json
+
+# ── THIRD-PARTY DEPENDENCIES ──
+node_modules/
+GroupBy/node_modules/
+my-react-app/node_modules/
+
+# ── PRODUCTION BUILDS ──
+dist/
+build/
+out/
+my-react-app/dist/
+
+# ── OPERATING SYSTEMS JUNK ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── LOGS AND DIAGNOSTICS ──
+*.log
+npm-debug.log*
+yarn-debug.log*
+.vscode/
+.idea/
+EOF
