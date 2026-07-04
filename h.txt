@@ -1,1 +1,3 @@
-mongodb+srv://gowrishangar24_db_user:<db_password>@groupbuy.1zeoluv.mongodb.net/?appName=GroupBuy
+mongodb+srv://gowrishangar24_db_user:myPassword.com@groupbuy.1zeoluv.mongodb.net/?appName=GroupBuy
+
+https://groupbuy-marketplace.onrender.com/api
