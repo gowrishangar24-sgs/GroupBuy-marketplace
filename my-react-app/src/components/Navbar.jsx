@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import GroupBuyOffcanvas from "./GroupBuyOffcanvas";
+import GroupBuyOffcanvas from "./GroupBuyOffCanvas";
 
 function Navbar({ searchTerm, setSearchTerm }) {
   const navigate = useNavigate();
