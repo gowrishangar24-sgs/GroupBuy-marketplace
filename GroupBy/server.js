@@ -1,17 +1,39 @@
 // ✅ LINE 1: dotenv loaded first so all process.env values are available
-// to every module that is required after this point.
 require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const cron = require("node-cron");
 
-// Allow requests from both your local testing environment and your live Vercel site
+const connectDB = require("./config/db");
+const errorMiddleware = require("./middleware/errorMiddleware");
+
+const authRoutes = require("./routes/authRoutes");
+const productRoutes = require("./routes/productRoutes");
+const dealRoutes = require("./routes/dealRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const sellerRoutes = require("./routes/sellerRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+
+const Deal = require("./models/Deal");
+const Product = require("./models/Product");
+
+// 1. INITIALIZE EXPRESS FIRST 
+const app = express();
+
+// 2. CONNECT TO DATABASE
+connectDB();
+
+// 3. DEFINE CORS PERMISSIONS POLICY
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173", // standard Vite port
   "https://group-buy-marketplace.vercel.app"
 ];
 
+// 4. MOUNT ADVANCED CORS MIDDLEWARE BEFORE ANY INCOMING ROUTE REQUESTS
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -30,30 +52,8 @@ app.use(cors({
 
 // Handle preflight requests globally
 app.options("*", cors());
-const cron = require("node-cron");
 
-const connectDB = require("./config/db");
-const errorMiddleware = require("./middleware/errorMiddleware");
-
-const authRoutes = require("./routes/authRoutes");
-const productRoutes = require("./routes/productRoutes");
-const dealRoutes = require("./routes/dealRoutes");
-const orderRoutes = require("./routes/orderRoutes");
-const wishlistRoutes = require("./routes/wishlistRoutes");
-const cartRoutes = require("./routes/cartRoutes");
-const sellerRoutes = require("./routes/sellerRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-
-// Models are imported here so the cron job can reference them directly
-// without creating a circular require chain through the route/controller layer.
-const Deal = require("./models/Deal");
-const Product = require("./models/Product");
-
-const app = express();
-
-connectDB();
-
-app.use(cors());
+// 5. PARSE REQUEST BODIES
 app.use(express.json());
 
 // ── Health check ──────────────────────────────────────────────────────────────
@@ -76,16 +76,6 @@ app.use(errorMiddleware);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AUTOMATED DEAL RESOLUTION — CRON JOB
-// ─────────────────────────────────────────────────────────────────────────────
-// Schedule: runs every minute ("* * * * *").
-// For production you may want a less frequent schedule such as
-// every 5 minutes ("*/5 * * * *") to reduce DB load.
-//
-// Logic per expired deal:
-//   • joinedUsers >= targetMembers  → status = "completed"
-//   • joinedUsers <  targetMembers  → status = "cancelled"
-//     + If the deal has a linked Product, restore the stock that
-//       was reserved for the pool (targetMembers - joinedUsers units).
 // ─────────────────────────────────────────────────────────────────────────────
 cron.schedule("* * * * *", async () => {
   try {
