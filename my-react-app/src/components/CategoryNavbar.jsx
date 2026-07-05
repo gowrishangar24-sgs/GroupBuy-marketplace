@@ -21,10 +21,13 @@ function CategoryNavbar() {
   const [categories, setCategories] = useState(FALLBACK_ORDER.map((k) => ({ key: k, count: 0 })));
   const [loading, setLoading] = useState(true);
 
+  // Dynamically points to your live Render environment URL or local dev server
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+
   useEffect(() => {
-    // Fetch product category stats
+    // Fetch product category stats using production environment variables
     axios
-      .get("http://localhost:5000/api/products/categories/stats")
+      .get(`${API_BASE_URL}/products/categories/stats`)
       .then((res) => {
         if (res.data.success) {
           // Merge DB counts with meta, keep all 7 categories even if count=0
@@ -44,7 +47,7 @@ function CategoryNavbar() {
         // silently keep fallback
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [API_BASE_URL]);
 
   const isActive = (path) =>
     location.pathname.toLowerCase() === path.toLowerCase() ||
@@ -52,14 +55,31 @@ function CategoryNavbar() {
 
   return (
     <nav
-      className="border-bottom bg-white navbar navbar-expand"
-      style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.05)" }}
+      className="border-bottom bg-white navbar navbar-expand py-1"
+      style={{ 
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+        zIndex: 999 
+      }}
     >
-      {/* ⚡ justify-content-center centers the entire navbar row inside the browser layout */}
+      {/* Changes: Swapped 'flex-wrap' with 'flex-nowrap' and added 'overflow-x-auto'.
+        Swapped 'justify-content-center' to shift elements cleanly while scrolling on small phone viewports.
+      */}
       <div
-        className="container-fluid justify-content-center d-flex align-items-center flex-wrap gap-2"
-        style={{ whiteSpace: "nowrap" }}
+        className="container-fluid justify-content-start justify-content-md-center d-flex align-items-center flex-nowrap gap-1 overflow-x-auto px-2"
+        style={{ 
+          whiteSpace: "nowrap",
+          scrollbarWidth: "none",            /* Firefox */
+          msOverflowStyle: "none",           /* IE/Edge */
+          WebkitOverflowScrolling: "touch"  /* Smooth iOS momentum swipe momentum */
+        }}
       >
+        {/* Hides native webkit scroll tracks for a clean aesthetic */}
+        <style>{`
+          .container-fluid::-webkit-scrollbar {
+            display: none !important;
+          }
+        `}</style>
+
         {categories.map(({ key, count }) => {
           const meta = CATEGORY_META[key];
           if (!meta) return null;
@@ -69,7 +89,7 @@ function CategoryNavbar() {
             <Link
               key={key}
               to={meta.path}
-              className="text-decoration-none d-flex flex-column align-items-center justify-content-center text-center px-3 py-2 flex-shrink-0 category-navbar-item"
+              className="text-decoration-none d-flex flex-column align-items-center justify-content-center text-center px-2 py-2 flex-shrink-0 category-navbar-item"
               style={{
                 borderBottom: active ? "2px solid #198754" : "2px solid transparent",
                 color: active ? "#198754" : "#555",
@@ -85,7 +105,7 @@ function CategoryNavbar() {
                 if (!active) e.currentTarget.style.borderBottomColor = "transparent";
               }}
             >
-              <span style={{ fontSize: "20px", lineHeight: 1 }}>{meta.emoji}</span>
+              <span style={{ fontSize: "18px", lineHeight: 1 }}>{meta.emoji}</span>
               <span className="mt-1" style={{ maxWidth: "100px", lineHeight: "1.2" }}>
                 {meta.label}
               </span>

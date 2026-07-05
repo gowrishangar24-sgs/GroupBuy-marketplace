@@ -4,7 +4,9 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/auth";
+// Dynamically adapts between your live production URL on Vercel and local environment testing
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API = `${API_BASE_URL}/auth`;
 
 function Login() {
   const navigate = useNavigate();
@@ -264,7 +266,6 @@ function Login() {
         .form-control.bg-dark::placeholder { color: #6c757d; }
         .form-control.bg-dark:focus { border-color: #198754 !important; box-shadow: 0 0 0 2px rgba(25,135,84,0.25); background: #1c1c1e; color: white; }
         
-        /* Ensures reset form entry text values stay perfectly black on render paints */
         .custom-add-input:focus {
           color: #212529 !important;
           background-color: #ffffff !important;

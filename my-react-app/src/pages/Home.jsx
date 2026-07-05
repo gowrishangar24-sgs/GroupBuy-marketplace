@@ -14,13 +14,16 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingDeals, setLoadingDeals] = useState(true);
 
+  // Dynamically uses your live Render URL in production, defaults to local host during development
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+
   useEffect(() => {
+    // Upgraded to pull data seamlessly from your live production cluster
     Promise.all([
-      axios.get("http://localhost:5000/api/deals"),
-      axios.get("http://localhost:5000/api/products"),
+      axios.get(`${API_BASE_URL}/deals`),
+      axios.get(`${API_BASE_URL}/products`),
     ])
       .then(([dealRes, prodRes]) => {
-        // ✅ Only use array arrays if the backend successfully responds with valid data lists
         if (dealRes.data.success && Array.isArray(dealRes.data.deals)) {
           setDeals(dealRes.data.deals);
         }
@@ -30,22 +33,18 @@ function Home() {
       })
       .catch((err) => console.error("Database fetch failed on deployment sequence:", err))
       .finally(() => setLoadingDeals(false));
-  }, []);
+  }, [API_BASE_URL]);
 
-  // Ensure items are strictly validated against active parameters
   const activeDealsOnly = deals.filter((d) => d && d.status === "active" && d.title);
 
-  // "Deals Ending Soon": active deals sorted ascending by daysLeft
   const endingSoonDeals = [...activeDealsOnly]
     .sort((a, b) => (a.daysLeft ?? 0) - (b.daysLeft ?? 0))
     .slice(0, 3);
 
-  // "Most Popular": sorted by joinedUsers desc
   const popularDeals = [...activeDealsOnly]
     .sort((a, b) => (b.joinedUsers ?? 0) - (a.joinedUsers ?? 0))
     .slice(0, 3);
 
-  // Filter lists matching active string values from search bar queries
   const filteredDeals = activeDealsOnly.filter((d) =>
     d.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -186,8 +185,24 @@ function Home() {
         <div className="text-center mb-5 py-4">
           <h1 className="display-4 fw-bold">Buy Together, Save More</h1>
           <p className="lead text-muted">Join group purchases and unlock exclusive discounts.</p>
-          <Link to="/electronics" className="btn btn-dark btn-lg me-2">Explore Categories</Link>
-          <Link to="/search?q=" className="btn btn-outline-success btn-lg">Browse All Deals</Link>
+          
+          {/* FIX: Standardized into a clean responsive flexbox structure */}
+          <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-center mt-4 px-3 mx-auto" style={{ maxWidth: "480px" }}>
+            <Link 
+              to="/electronics" 
+              className="btn btn-dark btn-lg w-100 w-sm-auto px-4 py-2" 
+              style={{ borderRadius: "8px", fontSize: "16px", fontWeight: "500" }}
+            >
+              Explore Categories
+            </Link>
+            <Link 
+              to="/search?q=" 
+              className="btn btn-outline-success btn-lg w-100 w-sm-auto px-4 py-2" 
+              style={{ borderRadius: "8px", fontSize: "16px", fontWeight: "500" }}
+            >
+              Browse All Deals
+            </Link>
+          </div>
         </div>
 
         {/* CATEGORY CARDS */}
