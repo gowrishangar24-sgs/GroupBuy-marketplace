@@ -51,7 +51,6 @@ app.use(cors({
 }));
 
 // Handle preflight requests globally
-app.options("*", cors());
 
 // 5. PARSE REQUEST BODIES
 app.use(express.json());
