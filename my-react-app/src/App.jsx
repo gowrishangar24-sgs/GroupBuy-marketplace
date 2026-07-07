@@ -1,12 +1,15 @@
-import { BrowserRouter as Router } from "react-router-dom"; // or your other imports
 import axios from "axios";
-
-// ⚡ Global Axios Configuration
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "";
-axios.defaults.withCredentials = true;
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PageLoader from "./components/PageLoader";
 
+// ⚡ Global Axios Configuration (Normalized Base Path)
+const rawBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+axios.defaults.baseURL = rawBase
+  ? (rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`)
+  : "/api";
+axios.defaults.withCredentials = true;
+
+// Page Imports
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -23,9 +26,10 @@ import HelpCenter from "./pages/HelpCenter";
 import ContactUs from "./pages/ContactUs";
 import FAQs from "./pages/FAQs";
 
-// ✅ One reusable component replaces 7 near-identical category pages
+// Reusable dynamic category layer
 import CategoryPage from "./pages/CategoryPage";
 
+// Offer Page Imports
 import ElectronicsOffer from "./pages/offers/ElectronicsOffer";
 import BeautyOffer from "./pages/offers/BeautyOffer";
 import KitchenOffer from "./pages/offers/KitchenOffer";
@@ -33,7 +37,7 @@ import FashionOffer from "./pages/offers/FashionOffer";
 import SportsOffer from "./pages/offers/SportsOffer";
 import BoatOffer from "./pages/offers/BoatOffer";
 
-// Category page config
+// Category configuration matrix
 const CATEGORIES = [
   {
     paths: ["/electronics", "/Electronics"],
@@ -117,44 +121,44 @@ const CATEGORIES = [
 function App() {
   return (
     <BrowserRouter>
-    <PageLoader>
-      <Routes>
-        {/* Core Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/account" element={<Account />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/search" element={<SearchResults />} />
+      <PageLoader>
+        <Routes>
+          {/* Core Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/search" element={<SearchResults />} />
 
-        {/* Seller Routes */}
-        <Route path="/SellerDashboard" element={<SellerDashboard />} />
-        <Route path="/AddProduct" element={<AddProduct />} />
-        <Route path="/CreateDeal" element={<CreateDeal />} />
-        <Route path="/MyDeals" element={<MyDeals />} />
+          {/* Seller Routes */}
+          <Route path="/SellerDashboard" element={<SellerDashboard />} />
+          <Route path="/AddProduct" element={<AddProduct />} />
+          <Route path="/CreateDeal" element={<CreateDeal />} />
+          <Route path="/MyDeals" element={<MyDeals />} />
 
-        {/* Product / Deal Detail */}
-        <Route path="/product/:id" element={<ProductDetails />} />
+          {/* Product / Deal Detail */}
+          <Route path="/product/:id" element={<ProductDetails />} />
 
-        {/* ✅ Dynamic category routes — generated from config array */}
-        {CATEGORIES.map(({ paths, props }) =>
-          paths.map((path) => (
-            <Route key={path} path={path} element={<CategoryPage {...props} />} />
-          ))
-        )}
+          {/* Dynamic category routes */}
+          {CATEGORIES.map(({ paths, props }) =>
+            paths.map((path) => (
+              <Route key={path} path={path} element={<CategoryPage {...props} />} />
+            ))
+          )}
 
-        {/* Offer Pages */}
-        <Route path="/offers/ElectronicsOffer" element={<ElectronicsOffer />} />
-        <Route path="/offers/BeautyOffer" element={<BeautyOffer />} />
-        <Route path="/offers/KitchenOffer" element={<KitchenOffer />} />
-        <Route path="/offers/FashionOffer" element={<FashionOffer />} />
-        <Route path="/offers/SportsOffer" element={<SportsOffer />} />
-        <Route path="/offers/BoatOffer" element={<BoatOffer />} />
-        <Route path="/help-center" element={<HelpCenter />} />
-<Route path="/contact-us" element={<ContactUs />} />
-<Route path="/faqs" element={<FAQs />} />
-      </Routes>
+          {/* Offer Pages */}
+          <Route path="/offers/ElectronicsOffer" element={<ElectronicsOffer />} />
+          <Route path="/offers/BeautyOffer" element={<BeautyOffer />} />
+          <Route path="/offers/KitchenOffer" element={<KitchenOffer />} />
+          <Route path="/offers/FashionOffer" element={<FashionOffer />} />
+          <Route path="/offers/SportsOffer" element={<SportsOffer />} />
+          <Route path="/offers/BoatOffer" element={<BoatOffer />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/faqs" element={<FAQs />} />
+        </Routes>
       </PageLoader>
     </BrowserRouter>
   );

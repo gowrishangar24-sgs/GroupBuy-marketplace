@@ -6,7 +6,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     watch: {
-      usePolling: true, // This forces Vite to watch for your React code changes
+      usePolling: true, // Forces Vite to watch for your React code changes
+    },
+    proxy: {
+      // Lets relative "/api/..." calls work in local dev even with no VITE_API_BASE_URL set,
+      // matching the same relative-path behavior used in production.
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   },
 })

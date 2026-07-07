@@ -4,11 +4,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import axios from "axios";
 
-// Dynamically adapts between your live production URL on Vercel and local environment testing
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
-  ? `${import.meta.env.VITE_API_BASE_URL}/auth` 
-  : "/auth";
-const API = `${API_BASE_URL}/auth`;
+// ✅ Clean & Relative: App.jsx handles the base path prefix automatically
+const API = "/auth";
 
 function Login() {
   const navigate = useNavigate();

@@ -12,15 +12,13 @@ function Navbar({ searchTerm, setSearchTerm }) {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
-  // Dynamically uses your live Render URL in production, defaults to local host during development
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-
   // Fetch cart + wishlist counts on mount (if logged in)
   useEffect(() => {
     if (!user || !token) return;
 
+    // ✅ Clean & Relative: axios automatically prepends the baseURL from App.jsx
     axios
-      .get(`${API_BASE_URL}/cart`, {
+      .get("/cart", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -32,7 +30,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
       .catch(() => {});
 
     axios
-      .get(`${API_BASE_URL}/wishlist`, {
+      .get("/wishlist", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -42,7 +40,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
         }
       })
       .catch(() => {});
-  }, [API_BASE_URL]);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -53,7 +51,6 @@ function Navbar({ searchTerm, setSearchTerm }) {
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-sm">
-        {/* Added 'flex-nowrap' to force all elements to stay strictly on one horizontal row on mobile */}
         <div className="container-fluid px-3 flex-nowrap justify-content-between align-items-center">
           
           {/* Left: Menu Side Trigger Button */}
@@ -66,7 +63,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
             ☰
           </button>
 
-          {/* Center-Left: Brand Logo (Slightly responsive height max for clean display) */}
+          {/* Center-Left: Brand Logo */}
           <Link className="navbar-brand fw-bold me-auto ms-1" to="/">
             <img src="/title.png" alt="GroupBuy" style={{ height: "clamp(30px, 4.5vw, 42px)", objectFit: "contain" }} />
           </Link>

@@ -18,10 +18,10 @@ function Home() {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
   useEffect(() => {
-    // Upgraded to pull data seamlessly from your live production cluster
+    // ✅ Clean & Relative: axios automatically prepends the baseURL + /api from App.jsx
     Promise.all([
-      axios.get(`${API_BASE_URL}/deals`),
-      axios.get(`${API_BASE_URL}/products`),
+      axios.get("/deals"),
+      axios.get("/products"),
     ])
       .then(([dealRes, prodRes]) => {
         if (dealRes.data.success && Array.isArray(dealRes.data.deals)) {
@@ -33,8 +33,9 @@ function Home() {
       })
       .catch((err) => console.error("Database fetch failed on deployment sequence:", err))
       .finally(() => setLoadingDeals(false));
-  }, [API_BASE_URL]);
-
+  }, []); 
+  
+  // ⚡ Dependency array is now empty because we don't rely on tracking API_BASE_URL anymore
   const activeDealsOnly = deals.filter((d) => d && d.status === "active" && d.title);
 
   const endingSoonDeals = [...activeDealsOnly]

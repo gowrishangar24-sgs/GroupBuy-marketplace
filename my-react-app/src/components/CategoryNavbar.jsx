@@ -2,7 +2,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-// Maps DB enum values → display config
 const CATEGORY_META = {
   electronics:   { label: "Electronics",   emoji: "💻", path: "/electronics"   },
   "home-kitchen": { label: "Home & Kitchen", emoji: "🏠", path: "/home-kitchen" },
@@ -13,7 +12,6 @@ const CATEGORY_META = {
   "toys-books": { label: "Toys & Books",   emoji: "📚", path: "/toysbooks"    },
 };
 
-// Fallback order if DB returns no counts
 const FALLBACK_ORDER = Object.keys(CATEGORY_META);
 
 function CategoryNavbar() {
@@ -21,16 +19,12 @@ function CategoryNavbar() {
   const [categories, setCategories] = useState(FALLBACK_ORDER.map((k) => ({ key: k, count: 0 })));
   const [loading, setLoading] = useState(true);
 
-  // Dynamically points to your live Render environment URL or local dev server
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-
   useEffect(() => {
-    // Fetch product category stats using production environment variables
+    // ✅ Clean & Relative: Prepends the centralized baseURL automatically
     axios
-      .get(`${API_BASE_URL}/products/categories/stats`)
+      .get("/products/categories/stats")
       .then((res) => {
         if (res.data.success) {
-          // Merge DB counts with meta, keep all 7 categories even if count=0
           const dbMap = {};
           res.data.categories.forEach((c) => { dbMap[c._id] = c.count; });
 
@@ -38,7 +32,6 @@ function CategoryNavbar() {
             key,
             count: dbMap[key] || 0,
           }));
-          // Sort by count desc but keep all 7
           merged.sort((a, b) => b.count - a.count);
           setCategories(merged);
         }
@@ -47,7 +40,7 @@ function CategoryNavbar() {
         // silently keep fallback
       })
       .finally(() => setLoading(false));
-  }, [API_BASE_URL]);
+  }, []);
 
   const isActive = (path) =>
     location.pathname.toLowerCase() === path.toLowerCase() ||
@@ -61,19 +54,15 @@ function CategoryNavbar() {
         zIndex: 999 
       }}
     >
-      {/* Changes: Swapped 'flex-wrap' with 'flex-nowrap' and added 'overflow-x-auto'.
-        Swapped 'justify-content-center' to shift elements cleanly while scrolling on small phone viewports.
-      */}
       <div
         className="container-fluid justify-content-start justify-content-md-center d-flex align-items-center flex-nowrap gap-1 overflow-x-auto px-2"
         style={{ 
           whiteSpace: "nowrap",
-          scrollbarWidth: "none",            /* Firefox */
-          msOverflowStyle: "none",           /* IE/Edge */
-          WebkitOverflowScrolling: "touch"  /* Smooth iOS momentum swipe momentum */
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch"
         }}
       >
-        {/* Hides native webkit scroll tracks for a clean aesthetic */}
         <style>{`
           .container-fluid::-webkit-scrollbar {
             display: none !important;
