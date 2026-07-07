@@ -3,6 +3,7 @@ const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 const { generateOtp, saveOtp, verifyOtp } = require("../utils/otpStore");
 const { sendOtpEmail, sendResetOtpEmail } = require("../utils/mailer");
+
 // ─────────────────────────────────────────
 // STEP 1: Send OTP to email before signup
 // ─────────────────────────────────────────
@@ -182,7 +183,8 @@ exports.forgotPassword = async (req, res, next) => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(444).json({ success: false, message: "No account found with this email address" });
+      // ✅ Fixed: Changed from non-standard 444 to cloud-compliant 404
+      return res.status(404).json({ success: false, message: "No account found with this email address" });
     }
 
     const otp = generateOtp();
