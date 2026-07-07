@@ -3,7 +3,9 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
-const API = "http://localhost:5000/api/auth";
+const API = import.meta.env.VITE_API_BASE_URL 
+  ? `${import.meta.env.VITE_API_BASE_URL}/auth` 
+  : "http://localhost:5000/api/auth";
 
 function Signup() {
   const navigate = useNavigate();
