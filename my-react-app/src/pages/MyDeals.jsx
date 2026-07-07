@@ -21,7 +21,7 @@ function MyDeals() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/deals/my-deals", {
+      .get("/deals/my-deals", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setDeals(res.data.deals))
@@ -32,7 +32,7 @@ function MyDeals() {
   const handleDelete = async (dealId) => {
     if (!window.confirm("Delete this deal?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/deals/${dealId}`, {
+      await axios.delete(`/deals/${dealId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeals(deals.filter((d) => d._id !== dealId));

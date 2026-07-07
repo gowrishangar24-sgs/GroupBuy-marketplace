@@ -27,7 +27,7 @@ function ProductDetails() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/api/products/${id}`)
+      .get(`/products/${id}`)
       .then((res) => {
         if (res.data.success && res.data.product) {
           setItem(res.data.product);
@@ -36,7 +36,7 @@ function ProductDetails() {
       })
       .catch(() => {
         axios
-          .get(`http://localhost:5000/api/deals/${id}`)
+          .get(`/deals/${id}`)
           .then((res) => {
             if (res.data.success && res.data.deal) {
               setItem(res.data.deal);
@@ -70,7 +70,7 @@ function ProductDetails() {
     setBuyingNow(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/orders/create",
+        "/orders/create",
         { productId: id, quantity: 1, shippingAddress: address },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -90,7 +90,7 @@ function ProductDetails() {
     setJoining(true);
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/deals/join/${id}`,
+        `/deals/join/${id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -108,7 +108,7 @@ function ProductDetails() {
     setAddingToCart(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/cart/add",
+        "/cart/add",
         { productId: id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -125,7 +125,7 @@ function ProductDetails() {
     setAddingToWishlist(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/wishlist/add",
+        "/wishlist/add",
         { productId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );

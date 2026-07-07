@@ -15,8 +15,8 @@ function Health() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Health"),
-      axios.get("http://localhost:5000/api/deals?category=Health"),
+      axios.get("/products?category=Health"),
+      axios.get("/deals?category=Health"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);

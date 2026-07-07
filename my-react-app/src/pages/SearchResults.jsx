@@ -23,8 +23,8 @@ function SearchResults() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      axios.get("http://localhost:5000/api/products"),
-      axios.get("http://localhost:5000/api/deals"),
+      axios.get("/products"),
+      axios.get("/deals"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);

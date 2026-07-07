@@ -19,8 +19,8 @@ function HomeKitchen() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products", { params: { category: CATEGORY } }),
-      axios.get("http://localhost:5000/api/deals",   { params: { category: CATEGORY } }),
+      axios.get("/products", { params: { category: CATEGORY } }),
+      axios.get("/deals",   { params: { category: CATEGORY } }),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);

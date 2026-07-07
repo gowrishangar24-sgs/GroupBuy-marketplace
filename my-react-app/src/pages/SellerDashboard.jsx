@@ -29,13 +29,13 @@ function SellerDashboard() {
     }
 
     Promise.all([
-      axios.get("http://localhost:5000/api/seller/dashboard", {
+      axios.get("/seller/dashboard", {
         headers: { Authorization: `Bearer ${token}` },
       }),
-      axios.get("http://localhost:5000/api/products/seller/my-products", {
+      axios.get("/products/seller/my-products", {
         headers: { Authorization: `Bearer ${token}` },
       }),
-      axios.get("http://localhost:5000/api/deals/my-deals", {
+      axios.get("/deals/my-deals", {
         headers: { Authorization: `Bearer ${token}` },
       }),
     ])
@@ -51,7 +51,7 @@ function SellerDashboard() {
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm("Delete this product?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+      await axios.delete(`/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(products.filter((p) => p._id !== productId));
@@ -64,7 +64,7 @@ function SellerDashboard() {
   const handleDeleteDeal = async (dealId) => {
     if (!window.confirm("Delete this group deal?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/deals/${dealId}`, {
+      await axios.delete(`/deals/${dealId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeals(deals.filter((d) => d._id !== dealId));

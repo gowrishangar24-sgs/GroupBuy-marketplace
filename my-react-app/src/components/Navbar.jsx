@@ -13,7 +13,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
   const token = localStorage.getItem("token");
 
   // Dynamically uses your live Render URL in production, defaults to local host during development
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
   // Fetch cart + wishlist counts on mount (if logged in)
   useEffect(() => {

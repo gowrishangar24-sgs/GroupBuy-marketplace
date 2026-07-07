@@ -96,7 +96,7 @@ function CreateDeal() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "http://localhost:5000/api/deals/create",
+        "/deals/create",
         { ...formData, tiers: parsedTiers },
         { headers: { Authorization: `Bearer ${token}` } }
       );

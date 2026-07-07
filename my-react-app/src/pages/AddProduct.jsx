@@ -31,7 +31,7 @@ function AddProduct() {
       const token = localStorage.getItem("token");
 
       await axios.post(
-        "http://localhost:5000/api/products/create",
+        "/products/create",
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -9,7 +9,7 @@ function FashionOffer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/deals")
+    axios.get("/deals")
       .then((res) => {
         const allDeals = res.data.deals || res.data || [];
         const filtered = allDeals.filter(d => 

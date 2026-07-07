@@ -20,7 +20,7 @@ function Account() {
     }
 
     axios
-      .get("http://localhost:5000/api/orders/my-orders", {
+      .get("/orders/my-orders", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setOrders(res.data.orders))

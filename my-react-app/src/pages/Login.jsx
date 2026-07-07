@@ -7,7 +7,7 @@ import axios from "axios";
 // Dynamically adapts between your live production URL on Vercel and local environment testing
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
   ? `${import.meta.env.VITE_API_BASE_URL}/auth` 
-  : "http://localhost:5000/api/auth";
+  : "/auth";
 const API = `${API_BASE_URL}/auth`;
 
 function Login() {

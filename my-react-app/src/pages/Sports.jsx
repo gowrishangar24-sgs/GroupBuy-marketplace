@@ -15,8 +15,8 @@ function Sports() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Sports"),
-      axios.get("http://localhost:5000/api/deals?category=Sports"),
+      axios.get("/products?category=Sports"),
+      axios.get("/deals?category=Sports"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);

@@ -2999,7 +2999,7 @@ function CreateDeal() {
       const token = localStorage.getItem("token");
 
       const res = await axios.post(
-        "http://localhost:5000/api/deals/create",
+        "/deals/create",
         formData,
         {
           headers: {
@@ -3156,7 +3156,7 @@ function CategoryNavbar() {
   useEffect(() => {
     // Fetch product category stats
     axios
-      .get("http://localhost:5000/api/products/categories/stats")
+      .get("/products/categories/stats")
       .then((res) => {
         if (res.data.success) {
           // Merge DB counts with meta, keep all 7 categories even if count=0
@@ -3707,7 +3707,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
     if (!user || !token) return;
 
     axios
-      .get("http://localhost:5000/api/cart", {
+      .get("/cart", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -3719,7 +3719,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
       .catch(() => {});
 
     axios
-      .get("http://localhost:5000/api/wishlist", {
+      .get("/wishlist", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -4053,7 +4053,7 @@ function Account() {
     }
 
     axios
-      .get("http://localhost:5000/api/orders/my-orders", {
+      .get("/orders/my-orders", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setOrders(res.data.orders))
@@ -4224,7 +4224,7 @@ function AddProduct() {
       const token = localStorage.getItem("token");
 
       await axios.post(
-        "http://localhost:5000/api/products/create",
+        "/products/create",
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -4424,8 +4424,8 @@ function Beauty() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Beauty"),
-      axios.get("http://localhost:5000/api/deals?category=Beauty"),
+      axios.get("/products?category=Beauty"),
+      axios.get("/deals?category=Beauty"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -4535,7 +4535,7 @@ function Cart() {
 
   const fetchCart = () => {
     axios
-      .get("http://localhost:5000/api/cart", {
+      .get("/cart", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -4553,7 +4553,7 @@ function Cart() {
 
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/cart/update/${productId}`,
+        `/cart/update/${productId}`,
         { quantity: newQty },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -4570,7 +4570,7 @@ function Cart() {
 
     try {
       const res = await axios.delete(
-        `http://localhost:5000/api/cart/remove/${productId}`,
+        `/cart/remove/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -4758,8 +4758,8 @@ function CategoryPage({ categoryKey, label, emoji, gradient, description, dealEm
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      axios.get("http://localhost:5000/api/products", { params: { category: categoryKey } }),
-      axios.get("http://localhost:5000/api/deals",    { params: { category: categoryKey } }),
+      axios.get("/products", { params: { category: categoryKey } }),
+      axios.get("/deals",    { params: { category: categoryKey } }),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -4965,8 +4965,8 @@ function Clothing() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Clothing"),
-      axios.get("http://localhost:5000/api/deals?category=Clothing"),
+      axios.get("/products?category=Clothing"),
+      axios.get("/deals?category=Clothing"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -5148,7 +5148,7 @@ function CreateDeal() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "http://localhost:5000/api/deals/create",
+        "/deals/create",
         { ...formData, tiers: parsedTiers },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -5391,8 +5391,8 @@ function Electronics() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Electronics"),
-      axios.get("http://localhost:5000/api/deals?category=Electronics"),
+      axios.get("/products?category=Electronics"),
+      axios.get("/deals?category=Electronics"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -5522,8 +5522,8 @@ function Health() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Health"),
-      axios.get("http://localhost:5000/api/deals?category=Health"),
+      axios.get("/products?category=Health"),
+      axios.get("/deals?category=Health"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -5625,8 +5625,8 @@ function Home() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/deals"),
-      axios.get("http://localhost:5000/api/products"),
+      axios.get("/deals"),
+      axios.get("/products"),
     ])
       .then(([dealRes, prodRes]) => {
         // ✅ Only use array arrays if the backend successfully responds with valid data lists
@@ -5920,8 +5920,8 @@ function HomeKitchen() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products", { params: { category: CATEGORY } }),
-      axios.get("http://localhost:5000/api/deals",   { params: { category: CATEGORY } }),
+      axios.get("/products", { params: { category: CATEGORY } }),
+      axios.get("/deals",   { params: { category: CATEGORY } }),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -6011,7 +6011,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/auth";
+const API = "/auth";
 
 function Login() {
   const navigate = useNavigate();
@@ -6159,7 +6159,7 @@ function MyDeals() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/deals/my-deals", {
+      .get("/deals/my-deals", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setDeals(res.data.deals))
@@ -6170,7 +6170,7 @@ function MyDeals() {
   const handleDelete = async (dealId) => {
     if (!window.confirm("Delete this deal?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/deals/${dealId}`, {
+      await axios.delete(`/deals/${dealId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeals(deals.filter((d) => d._id !== dealId));
@@ -6313,7 +6313,7 @@ function BeautyOffer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/deals")
+    axios.get("/deals")
       .then((res) => {
         const allDeals = res.data.deals || res.data || [];
         // Filter live deals that contain "beauty" in the category string
@@ -6377,7 +6377,7 @@ function BoatOffer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/deals")
+    axios.get("/deals")
       .then((res) => {
         const allDeals = res.data.deals || res.data || [];
         // Filter deals where the title specifically contains "boat"
@@ -6452,7 +6452,7 @@ function ElectronicsOffer() {
   ];
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/deals")
+    axios.get("/deals")
       .then((res) => {
         const allDeals = res.data.deals || res.data || [];
         const filtered = allDeals.filter(d => d.category?.toLowerCase().includes("electronic"));
@@ -6525,7 +6525,7 @@ function FashionOffer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/deals")
+    axios.get("/deals")
       .then((res) => {
         const allDeals = res.data.deals || res.data || [];
         const filtered = allDeals.filter(d => 
@@ -6591,7 +6591,7 @@ function KitchenOffer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/deals")
+    axios.get("/deals")
       .then((res) => {
         const allDeals = res.data.deals || res.data || [];
         const filtered = allDeals.filter(d => d.category?.toLowerCase().includes("kitchen") || d.category?.toLowerCase().includes("home"));
@@ -6654,7 +6654,7 @@ function SportsOffer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/deals")
+    axios.get("/deals")
       .then((res) => {
         const allDeals = res.data.deals || res.data || [];
         const filtered = allDeals.filter(d => d.category?.toLowerCase().includes("sport") || d.category?.toLowerCase().includes("outdoor"));
@@ -6765,7 +6765,7 @@ function ProductDetails() {
   useEffect(() => {
     // Try product first, fall back to deal
     axios
-      .get(`http://localhost:5000/api/products/${id}`)
+      .get(`/products/${id}`)
       .then((res) => {
         if (res.data.success && res.data.product) {
           setItem(res.data.product);
@@ -6774,7 +6774,7 @@ function ProductDetails() {
       })
       .catch(() => {
         axios
-          .get(`http://localhost:5000/api/deals/${id}`)
+          .get(`/deals/${id}`)
           .then((res) => {
             if (res.data.success && res.data.deal) {
               setItem(res.data.deal);
@@ -6799,7 +6799,7 @@ function ProductDetails() {
     setJoining(true);
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/deals/join/${id}`,
+        `/deals/join/${id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -6817,7 +6817,7 @@ function ProductDetails() {
     setAddingToCart(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/cart/add",
+        "/cart/add",
         { productId: id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -6834,7 +6834,7 @@ function ProductDetails() {
     setAddingToWishlist(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/wishlist/add",
+        "/wishlist/add",
         { productId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -7187,8 +7187,8 @@ function SearchResults() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      axios.get("http://localhost:5000/api/products"),
-      axios.get("http://localhost:5000/api/deals"),
+      axios.get("/products"),
+      axios.get("/deals"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -7351,13 +7351,13 @@ function SellerDashboard() {
     }
 
     Promise.all([
-      axios.get("http://localhost:5000/api/seller/dashboard", {
+      axios.get("/seller/dashboard", {
         headers: { Authorization: `Bearer ${token}` },
       }),
-      axios.get("http://localhost:5000/api/products/seller/my-products", {
+      axios.get("/products/seller/my-products", {
         headers: { Authorization: `Bearer ${token}` },
       }),
-      axios.get("http://localhost:5000/api/deals/my-deals", {
+      axios.get("/deals/my-deals", {
         headers: { Authorization: `Bearer ${token}` },
       }),
     ])
@@ -7373,7 +7373,7 @@ function SellerDashboard() {
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm("Delete this product?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+      await axios.delete(`/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(products.filter((p) => p._id !== productId));
@@ -7386,7 +7386,7 @@ function SellerDashboard() {
   const handleDeleteDeal = async (dealId) => {
     if (!window.confirm("Delete this group deal?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/deals/${dealId}`, {
+      await axios.delete(`/deals/${dealId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeals(deals.filter((d) => d._id !== dealId));
@@ -7664,7 +7664,7 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
-const API = "http://localhost:5000/api/auth";
+const API = "/auth";
 
 function Signup() {
   const navigate = useNavigate();
@@ -8103,8 +8103,8 @@ function Sports() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Sports"),
-      axios.get("http://localhost:5000/api/deals?category=Sports"),
+      axios.get("/products?category=Sports"),
+      axios.get("/deals?category=Sports"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -8209,8 +8209,8 @@ function ToysBooks() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products", { params: { category: CATEGORY } }),
-      axios.get("http://localhost:5000/api/deals",   { params: { category: CATEGORY } }),
+      axios.get("/products", { params: { category: CATEGORY } }),
+      axios.get("/deals",   { params: { category: CATEGORY } }),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);
@@ -8320,7 +8320,7 @@ function Wishlist() {
 
   const fetchWishlist = () => {
     axios
-      .get("http://localhost:5000/api/wishlist", {
+      .get("/wishlist", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -8335,7 +8335,7 @@ function Wishlist() {
   const handleRemoveWishItem = async (productId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:5000/api/wishlist/remove/${productId}`,
+        `/wishlist/remove/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {

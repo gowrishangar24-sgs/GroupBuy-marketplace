@@ -15,7 +15,7 @@ function Home() {
   const [loadingDeals, setLoadingDeals] = useState(true);
 
   // Dynamically uses your live Render URL in production, defaults to local host during development
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
   useEffect(() => {
     // Upgraded to pull data seamlessly from your live production cluster

@@ -15,8 +15,8 @@ function Electronics() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Electronics"),
-      axios.get("http://localhost:5000/api/deals?category=Electronics"),
+      axios.get("/products?category=Electronics"),
+      axios.get("/deals?category=Electronics"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);

@@ -37,8 +37,8 @@ function CategoryPage({ categoryKey, label, emoji, gradient, description, dealEm
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      axios.get("http://localhost:5000/api/products", { params: { category: categoryKey } }),
-      axios.get("http://localhost:5000/api/deals",    { params: { category: categoryKey } }),
+      axios.get("/products", { params: { category: categoryKey } }),
+      axios.get("/deals",    { params: { category: categoryKey } }),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);

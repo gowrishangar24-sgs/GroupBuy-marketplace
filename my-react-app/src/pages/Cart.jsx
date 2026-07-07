@@ -30,7 +30,7 @@ function Cart() {
 
   const fetchCart = () => {
     axios
-      .get("http://localhost:5000/api/cart", {
+      .get("/cart", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -48,7 +48,7 @@ function Cart() {
 
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/cart/update/${productId}`,
+        `/cart/update/${productId}`,
         { quantity: newQty },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -63,7 +63,7 @@ function Cart() {
   const handleRemoveItem = async (productId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:5000/api/cart/remove/${productId}`,
+        `/cart/remove/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -87,7 +87,7 @@ function Cart() {
       for (const item of cart.items) {
         if (!item.product) continue;
         await axios.post(
-          "http://localhost:5000/api/orders/create",
+          "/orders/create",
           { 
             productId: item.product._id, 
             quantity: item.quantity, 
@@ -97,7 +97,7 @@ function Cart() {
         );
 
         // Remove the item from backend cart schema after ordering it successfully
-        await axios.delete(`http://localhost:5000/api/cart/remove/${item.product._id}`, {
+        await axios.delete(`/cart/remove/${item.product._id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }

@@ -15,8 +15,8 @@ function Beauty() {
 
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:5000/api/products?category=Beauty"),
-      axios.get("http://localhost:5000/api/deals?category=Beauty"),
+      axios.get("/products?category=Beauty"),
+      axios.get("/deals?category=Beauty"),
     ])
       .then(([prodRes, dealRes]) => {
         if (prodRes.data.success) setProducts(prodRes.data.products);

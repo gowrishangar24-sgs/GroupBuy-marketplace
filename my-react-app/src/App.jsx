@@ -1,3 +1,9 @@
+import { BrowserRouter as Router } from "react-router-dom"; // or your other imports
+import axios from "axios";
+
+// ⚡ Global Axios Configuration
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "";
+axios.defaults.withCredentials = true;
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PageLoader from "./components/PageLoader";
 

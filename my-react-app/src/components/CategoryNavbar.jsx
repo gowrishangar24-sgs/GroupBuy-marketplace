@@ -22,7 +22,7 @@ function CategoryNavbar() {
   const [loading, setLoading] = useState(true);
 
   // Dynamically points to your live Render environment URL or local dev server
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
   useEffect(() => {
     // Fetch product category stats using production environment variables
