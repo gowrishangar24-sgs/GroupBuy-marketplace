@@ -13,15 +13,17 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false 
   },
-  // 🔥 Forces Nodemailer to resolve only IPv4 endpoints to bypass Render's ENETUNREACH block
+  // Forces Nodemailer to resolve only IPv4 endpoints to bypass Render's ENETUNREACH block
   lookup: (hostname, options, callback) => {
     return dns.lookup(hostname, { family: 4 }, callback);
-  }
+  },
+  // 🔧 TIMEOUT PROTECTION: Prevents the server from hanging indefinitely on network bottlenecks
+  connectionTimeout: 8000, // Time limit to establish a TCP handshake (8 seconds)
+  greetingTimeout: 8000,   // Time limit to receive the SMTP greetings reply
+  socketTimeout: 8000,     // Time limit to kill an idle connection socket
 });
 
-// ─────────────────────────────────────────
 // 1. Send OTP Email (Signup Verification)
-// ─────────────────────────────────────────
 async function sendOtpEmail(toEmail, otp) {
   const mailOptions = {
     from: `"GroupBuy" <${process.env.MAIL_USER}>`,
@@ -42,9 +44,7 @@ async function sendOtpEmail(toEmail, otp) {
   await transporter.sendMail(mailOptions);
 }
 
-// ─────────────────────────────────────────
 // 2. Send Order Confirmation Email
-// ─────────────────────────────────────────
 async function sendOrderConfirmationEmail(toEmail, order, product) {
   const mailOptions = {
     from: `"GroupBuy" <${process.env.MAIL_USER}>`,
@@ -69,9 +69,7 @@ async function sendOrderConfirmationEmail(toEmail, order, product) {
   await transporter.sendMail(mailOptions);
 }
 
-// ─────────────────────────────────────────
 // 3. Send Reset OTP Email (Password Recovery)
-// ─────────────────────────────────────────
 async function sendResetOtpEmail(toEmail, otp) {
   const mailOptions = {
     from: `"GroupBuy Support" <${process.env.MAIL_USER}>`,
@@ -92,7 +90,6 @@ async function sendResetOtpEmail(toEmail, otp) {
   await transporter.sendMail(mailOptions);
 }
 
-// Unified module exports configuration
 module.exports = { 
   sendOtpEmail, 
   sendOrderConfirmationEmail, 

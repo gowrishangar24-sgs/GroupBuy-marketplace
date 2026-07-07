@@ -29,7 +29,6 @@ const app = express();
 connectDB();
 
 // 3. DEFINE CORS PERMISSIONS POLICY
-// 3. DEFINE CORS PERMISSIONS POLICY
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173", // standard Vite port
@@ -45,22 +44,30 @@ app.use(cors({
     // Check if the request comes from localhost or any Vercel domain variant
     const isLocalhost = origin.startsWith("http://localhost");
     const isVercelSubdomain = origin.endsWith(".vercel.app");
+    const isExplicitlyAllowed = allowedOrigins.includes(origin);
     
-    if (isLocalhost || isVercelSubdomain || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+    if (isLocalhost || isVercelSubdomain || isExplicitlyAllowed) {
+      return callback(null, true);
     }
+    
+    // ✅ Deny gracefully instead of throwing — avoids unhandled runtime crash loops
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Handle preflight requests globally
-
 // 5. PARSE REQUEST BODIES
 app.use(express.json());
+
+// ── SURFACES CRASHES IN RENDER LOGS INSTEAD OF SILENT PROCESS DEATH ───────────
+process.on("unhandledRejection", (reason) => {
+  console.error("[UNHANDLED REJECTION]", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[UNCAUGHT EXCEPTION]", err);
+});
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
