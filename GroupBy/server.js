@@ -27,6 +27,7 @@ const app = express();
 connectDB();
 
 // 3. DEFINE CORS PERMISSIONS POLICY
+// 3. DEFINE CORS PERMISSIONS POLICY
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173", // standard Vite port
@@ -39,7 +40,11 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if the request comes from localhost or any Vercel domain variant
+    const isLocalhost = origin.startsWith("http://localhost");
+    const isVercelSubdomain = origin.endsWith(".vercel.app");
+    
+    if (isLocalhost || isVercelSubdomain || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
