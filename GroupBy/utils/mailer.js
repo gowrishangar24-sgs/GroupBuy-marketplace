@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -11,9 +12,16 @@ const transporter = nodemailer.createTransport({
   },
   tls: {
     rejectUnauthorized: false 
+  },
+  // 🔥 Forces Nodemailer to resolve only IPv4 endpoints to bypass Render's ENETUNREACH block
+  lookup: (hostname, options, callback) => {
+    return dns.lookup(hostname, { family: 4 }, callback);
   }
 });
 
+// ─────────────────────────────────────────
+// 1. Send OTP Email (Signup Verification)
+// ─────────────────────────────────────────
 async function sendOtpEmail(toEmail, otp) {
   const mailOptions = {
     from: `"GroupBuy" <${process.env.MAIL_USER}>`,
@@ -34,7 +42,9 @@ async function sendOtpEmail(toEmail, otp) {
   await transporter.sendMail(mailOptions);
 }
 
-// New Order Confirmation Email Function
+// ─────────────────────────────────────────
+// 2. Send Order Confirmation Email
+// ─────────────────────────────────────────
 async function sendOrderConfirmationEmail(toEmail, order, product) {
   const mailOptions = {
     from: `"GroupBuy" <${process.env.MAIL_USER}>`,
@@ -59,9 +69,9 @@ async function sendOrderConfirmationEmail(toEmail, order, product) {
   await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendOtpEmail, sendOrderConfirmationEmail };
-
-// Add this function right above your module.exports
+// ─────────────────────────────────────────
+// 3. Send Reset OTP Email (Password Recovery)
+// ─────────────────────────────────────────
 async function sendResetOtpEmail(toEmail, otp) {
   const mailOptions = {
     from: `"GroupBuy Support" <${process.env.MAIL_USER}>`,
@@ -82,5 +92,9 @@ async function sendResetOtpEmail(toEmail, otp) {
   await transporter.sendMail(mailOptions);
 }
 
-// Update your exports to include the new function
-module.exports = { sendOtpEmail, sendOrderConfirmationEmail, sendResetOtpEmail };
+// Unified module exports configuration
+module.exports = { 
+  sendOtpEmail, 
+  sendOrderConfirmationEmail, 
+  sendResetOtpEmail 
+};
