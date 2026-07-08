@@ -9,14 +9,17 @@ const { sendOtpEmail, sendResetOtpEmail } = require("../utils/mailer");
 // ─────────────────────────────────────────
 exports.sendOtp = async (req, res, next) => {
   try {
-    const { email, username } = req.body;
+    const { email: rawEmail, username } = req.body;
 
-    if (!email || !email.includes("@")) {
+    if (!rawEmail || !rawEmail.includes("@")) {
       return res.status(400).json({ success: false, message: "Valid email is required" });
     }
 
+    // ✅ FIX: Force lowercase and trim to ensure matching storage keys
+    const email = rawEmail.toLowerCase().trim();
+
     // Check email uniqueness
-    const emailExists = await User.findOne({ email: email.toLowerCase() });
+    const emailExists = await User.findOne({ email });
     if (emailExists) {
       return res.status(400).json({ success: false, message: "Email is already registered" });
     }
@@ -48,7 +51,10 @@ exports.sendOtp = async (req, res, next) => {
 // ─────────────────────────────────────────
 exports.signup = async (req, res, next) => {
   try {
-    const { username, name, dob, email, password, otp, role } = req.body;
+    const { username, name, dob, email: rawEmail, password, otp, role } = req.body;
+
+    // ✅ FIX: Match the lowercase trimmed email key variant
+    const email = rawEmail.toLowerCase().trim();
 
     // Validate OTP
     const otpResult = verifyOtp(email, otp);
@@ -57,7 +63,7 @@ exports.signup = async (req, res, next) => {
     }
 
     // Re-check uniqueness (race condition safety)
-    const emailExists = await User.findOne({ email: email.toLowerCase() });
+    const emailExists = await User.findOne({ email });
     if (emailExists) {
       return res.status(400).json({ success: false, message: "Email is already registered" });
     }
@@ -82,7 +88,7 @@ exports.signup = async (req, res, next) => {
       username: username.trim(),
       name,
       dob,
-      email: email.toLowerCase(),
+      email,
       password: hashedPassword,
       role: role || "buyer",
       isEmailVerified: true,
@@ -114,7 +120,7 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
@@ -183,12 +189,11 @@ exports.forgotPassword = async (req, res, next) => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      // ✅ Fixed: Changed from non-standard 444 to cloud-compliant 404
       return res.status(404).json({ success: false, message: "No account found with this email address" });
     }
 
     const otp = generateOtp();
-    saveOtp(email, otp);
+    saveOtp(email.toLowerCase().trim(), otp);
 
     await sendResetOtpEmail(user.email, otp);
 
@@ -208,8 +213,10 @@ exports.resetPassword = async (req, res, next) => {
   try {
     const { email, otp, newPassword } = req.body;
 
+    const targetEmail = email.toLowerCase().trim();
+
     // Verify code validation status
-    const otpResult = verifyOtp(email, otp);
+    const otpResult = verifyOtp(targetEmail, otp);
     if (!otpResult.valid) {
       return res.status(400).json({ success: false, message: otpResult.reason });
     }
@@ -223,7 +230,7 @@ exports.resetPassword = async (req, res, next) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await User.findOne({ email: targetEmail });
     if (!user) {
       return res.status(404).json({ success: false, message: "User account context not found" });
     }
