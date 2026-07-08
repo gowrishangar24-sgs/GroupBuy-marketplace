@@ -1,42 +1,17 @@
-const nodemailer = require("nodemailer");
-const dns = require("dns");
+const { BrevoClient } = require("@getbrevo/brevo");
 
-// ⚡ Hardened Nodemailer Transporter Configured for Cloud Egress Compatibility
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,        // Switched to 587 to leverage STARTTLS delivery channels
-  secure: false,    // Must remain false for port 587 protocol handshakes
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-    minVersion: "TLSv1.2" // Requires modern secure sockets layer compliance
-  },
-  // 🛰️ Strict IPv4 Enforcement: Intercepts connection lookups to ignore blocked cloud IPv6 blocks
-  lookup: (hostname, options, callback) => {
-    if (typeof options === "function") {
-      callback = options;
-      options = {};
-    }
-    return dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
-  },
-  // 🔧 Timeout Protection: Prevents the instance from hanging indefinitely during handshake bottlenecks
-  connectionTimeout: 10000, // Max wait threshold to open a TCP line (10 seconds)
-  greetingTimeout: 10000,   // Max wait threshold to receive initial SMTP greeting
-  socketTimeout: 10000,     // Max wait threshold to drop a stalled, inactive socket channel
+// ⚡ Initialize the modern Brevo client cleanly using your environment key
+const brevo = new BrevoClient({
+  apiKey: process.env.MAIL_PASS,
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Send OTP Email (Signup Verification)
 // ─────────────────────────────────────────────────────────────────────────────
 async function sendOtpEmail(toEmail, otp) {
-  const mailOptions = {
-    from: `"GroupBuy" <${process.env.MAIL_USER}>`,
-    to: toEmail,
+  await brevo.transactionalEmails.sendTransacEmail({
     subject: "Your GroupBuy Email Verification OTP",
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
         <h2 style="color: #1a1a1a; margin-bottom: 8px;">Verify your email</h2>
         <p style="color: #555; margin-bottom: 24px;">Use the code below to complete your GroupBuy registration. It expires in <strong>10 minutes</strong>.</p>
@@ -46,20 +21,18 @@ async function sendOtpEmail(toEmail, otp) {
         <p style="color: #999; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
       </div>
     `,
-  };
-
-  await transporter.sendMail(mailOptions);
+    sender: { name: "GroupBuy", email: process.env.MAIL_USER },
+    to: [{ email: toEmail }],
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. Send Order Confirmation Email
 // ─────────────────────────────────────────────────────────────────────────────
 async function sendOrderConfirmationEmail(toEmail, order, product) {
-  const mailOptions = {
-    from: `"GroupBuy" <${process.env.MAIL_USER}>`,
-    to: toEmail,
+  await brevo.transactionalEmails.sendTransacEmail({
     subject: "Your GroupBuy Order Confirmation",
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
         <h2 style="color: #1a1a1a; margin-bottom: 8px;">Order Placed! 🎉</h2>
         <p style="color: #555; margin-bottom: 24px;">Thanks for your order. Here are the details:</p>
@@ -73,20 +46,18 @@ async function sendOrderConfirmationEmail(toEmail, order, product) {
         <p style="color: #999; font-size: 13px;">Order ID: ${order._id}</p>
       </div>
     `,
-  };
-
-  await transporter.sendMail(mailOptions);
+    sender: { name: "GroupBuy", email: process.env.MAIL_USER },
+    to: [{ email: toEmail }],
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. Send Reset OTP Email (Password Recovery)
 // ─────────────────────────────────────────────────────────────────────────────
 async function sendResetOtpEmail(toEmail, otp) {
-  const mailOptions = {
-    from: `"GroupBuy Support" <${process.env.MAIL_USER}>`,
-    to: toEmail,
+  await brevo.transactionalEmails.sendTransacEmail({
     subject: "Reset Your GroupBuy Password",
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
         <h2 style="color: #dc3545; margin-bottom: 8px;">Password Reset Request</h2>
         <p style="color: #555; margin-bottom: 24px;">Use the verification code below to update your password securely. This code expires in <strong>10 minutes</strong>.</p>
@@ -96,9 +67,9 @@ async function sendResetOtpEmail(toEmail, otp) {
         <p style="color: #999; font-size: 13px;">If you didn't request a password reset, you can safely ignore this email.</p>
       </div>
     `,
-  };
-
-  await transporter.sendMail(mailOptions);
+    sender: { name: "GroupBuy Support", email: process.env.MAIL_USER },
+    to: [{ email: toEmail }],
+  });
 }
 
 module.exports = { 
