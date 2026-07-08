@@ -1,19 +1,20 @@
 const nodemailer = require("nodemailer");
 const dns = require("dns");
 
+// ⚡ Hardened Nodemailer Transporter Configured for Cloud Egress Compatibility
 const transporter = nodemailer.createTransport({
-  // ❌ REMOVED service: "gmail" -> This was overriding our custom IPv4 rules!
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // true for port 465
+  port: 587,        // Switched to 587 to leverage STARTTLS delivery channels
+  secure: false,    // Must remain false for port 587 protocol handshakes
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false 
+    rejectUnauthorized: false,
+    minVersion: "TLSv1.2" // Requires modern secure sockets layer compliance
   },
-  // 🔥 Strict IPv4 Enforcement: Explicitly forces Nodemailer to ignore Render's blocked IPv6 setup
+  // 🛰️ Strict IPv4 Enforcement: Intercepts connection lookups to ignore blocked cloud IPv6 blocks
   lookup: (hostname, options, callback) => {
     if (typeof options === "function") {
       callback = options;
@@ -21,13 +22,15 @@ const transporter = nodemailer.createTransport({
     }
     return dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
   },
-  // 🔧 TIMEOUT PROTECTION: Prevents requests from hanging indefinitely on network bottlenecks
-  connectionTimeout: 8000, // Time limit to establish a TCP handshake (8 seconds)
-  greetingTimeout: 8000,   // Time limit to receive the SMTP greetings reply
-  socketTimeout: 8000,     // Time limit to kill an idle connection socket
+  // 🔧 Timeout Protection: Prevents the instance from hanging indefinitely during handshake bottlenecks
+  connectionTimeout: 10000, // Max wait threshold to open a TCP line (10 seconds)
+  greetingTimeout: 10000,   // Max wait threshold to receive initial SMTP greeting
+  socketTimeout: 10000,     // Max wait threshold to drop a stalled, inactive socket channel
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
 // 1. Send OTP Email (Signup Verification)
+// ─────────────────────────────────────────────────────────────────────────────
 async function sendOtpEmail(toEmail, otp) {
   const mailOptions = {
     from: `"GroupBuy" <${process.env.MAIL_USER}>`,
@@ -48,7 +51,9 @@ async function sendOtpEmail(toEmail, otp) {
   await transporter.sendMail(mailOptions);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 // 2. Send Order Confirmation Email
+// ─────────────────────────────────────────────────────────────────────────────
 async function sendOrderConfirmationEmail(toEmail, order, product) {
   const mailOptions = {
     from: `"GroupBuy" <${process.env.MAIL_USER}>`,
@@ -73,7 +78,9 @@ async function sendOrderConfirmationEmail(toEmail, order, product) {
   await transporter.sendMail(mailOptions);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 // 3. Send Reset OTP Email (Password Recovery)
+// ─────────────────────────────────────────────────────────────────────────────
 async function sendResetOtpEmail(toEmail, otp) {
   const mailOptions = {
     from: `"GroupBuy Support" <${process.env.MAIL_USER}>`,
