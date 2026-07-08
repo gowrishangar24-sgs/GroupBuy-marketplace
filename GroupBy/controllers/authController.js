@@ -33,7 +33,7 @@ exports.sendOtp = async (req, res, next) => {
     }
 
     const otp = generateOtp();
-    saveOtp(email, otp);
+    await saveOtp(email, otp);
 
     await sendOtpEmail(email, otp);
 
@@ -57,7 +57,7 @@ exports.signup = async (req, res, next) => {
     const email = rawEmail.toLowerCase().trim();
 
     // Validate OTP
-    const otpResult = verifyOtp(email, otp);
+    const otpResult = await verifyOtp(email, otp);
     if (!otpResult.valid) {
       return res.status(400).json({ success: false, message: otpResult.reason });
     }
@@ -193,7 +193,7 @@ exports.forgotPassword = async (req, res, next) => {
     }
 
     const otp = generateOtp();
-    saveOtp(email.toLowerCase().trim(), otp);
+    await saveOtp(email.toLowerCase().trim(), otp);
 
     await sendResetOtpEmail(user.email, otp);
 
@@ -216,7 +216,7 @@ exports.resetPassword = async (req, res, next) => {
     const targetEmail = email.toLowerCase().trim();
 
     // Verify code validation status
-    const otpResult = verifyOtp(targetEmail, otp);
+    const otpResult = await  verifyOtp(targetEmail, otp);
     if (!otpResult.valid) {
       return res.status(400).json({ success: false, message: otpResult.reason });
     }
