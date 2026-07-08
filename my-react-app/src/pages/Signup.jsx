@@ -3,10 +3,8 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_BASE_URL 
-  ? `${import.meta.env.VITE_API_BASE_URL}/auth` 
-  : "/auth";
-
+// ✅ Clean & Relative: App.jsx handles the base path prefix automatically
+const API = "/auth";
 function Signup() {
   const navigate = useNavigate();
 

@@ -3405,21 +3405,6 @@ export default HelpCenter;
 }
 </file>
 
-<file path="my-react-app/vite.config.js">
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    watch: {
-      usePolling: true, // This forces Vite to watch for your React code changes
-    },
-  },
-})
-</file>
-
 <file path="GroupBy/controllers/authController.js">
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
@@ -3663,275 +3648,6 @@ exports.resetPassword = async (req, res, next) => {
     next(error);
   }
 };
-</file>
-
-<file path="GroupBy/utils/mailer.js">
-const nodemailer = require("nodemailer");
-const dns = require("dns");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, 
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false 
-  },
-  // 🔥 Forces Nodemailer to resolve only IPv4 endpoints to bypass Render's ENETUNREACH block
-  lookup: (hostname, options, callback) => {
-    return dns.lookup(hostname, { family: 4 }, callback);
-  }
-});
-
-// ─────────────────────────────────────────
-// 1. Send OTP Email (Signup Verification)
-// ─────────────────────────────────────────
-async function sendOtpEmail(toEmail, otp) {
-  const mailOptions = {
-    from: `"GroupBuy" <${process.env.MAIL_USER}>`,
-    to: toEmail,
-    subject: "Your GroupBuy Email Verification OTP",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
-        <h2 style="color: #1a1a1a; margin-bottom: 8px;">Verify your email</h2>
-        <p style="color: #555; margin-bottom: 24px;">Use the code below to complete your GroupBuy registration. It expires in <strong>10 minutes</strong>.</p>
-        <div style="background: #212529; color: #fff; font-size: 36px; font-weight: bold; letter-spacing: 12px; text-align: center; padding: 20px 32px; border-radius: 8px; margin-bottom: 24px;">
-          ${otp}
-        </div>
-        <p style="color: #999; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
-      </div>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
-}
-
-// ─────────────────────────────────────────
-// 2. Send Order Confirmation Email
-// ─────────────────────────────────────────
-async function sendOrderConfirmationEmail(toEmail, order, product) {
-  const mailOptions = {
-    from: `"GroupBuy" <${process.env.MAIL_USER}>`,
-    to: toEmail,
-    subject: "Your GroupBuy Order Confirmation",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
-        <h2 style="color: #1a1a1a; margin-bottom: 8px;">Order Placed! 🎉</h2>
-        <p style="color: #555; margin-bottom: 24px;">Thanks for your order. Here are the details:</p>
-        <table style="width:100%; border-collapse: collapse; margin-bottom: 20px;">
-          <tr><td style="padding:6px 0; color:#777;">Product</td><td style="padding:6px 0; font-weight:bold;">${product?.title || "N/A"}</td></tr>
-          <tr><td style="padding:6px 0; color:#777;">Quantity</td><td style="padding:6px 0; font-weight:bold;">${order.quantity}</td></tr>
-          <tr><td style="padding:6px 0; color:#777;">Total</td><td style="padding:6px 0; font-weight:bold;">₹${order.totalPrice}</td></tr>
-          <tr><td style="padding:6px 0; color:#777;">Payment Mode</td><td style="padding:6px 0; font-weight:bold;">Cash on Delivery</td></tr>
-          <tr><td style="padding:6px 0; color:#777;">Shipping Address</td><td style="padding:6px 0; font-weight:bold;">${order.shippingAddress || "-"}</td></tr>
-        </table>
-        <p style="color: #999; font-size: 13px;">Order ID: ${order._id}</p>
-      </div>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
-}
-
-// ─────────────────────────────────────────
-// 3. Send Reset OTP Email (Password Recovery)
-// ─────────────────────────────────────────
-async function sendResetOtpEmail(toEmail, otp) {
-  const mailOptions = {
-    from: `"GroupBuy Support" <${process.env.MAIL_USER}>`,
-    to: toEmail,
-    subject: "Reset Your GroupBuy Password",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
-        <h2 style="color: #dc3545; margin-bottom: 8px;">Password Reset Request</h2>
-        <p style="color: #555; margin-bottom: 24px;">Use the verification code below to update your password securely. This code expires in <strong>10 minutes</strong>.</p>
-        <div style="background: #212529; color: #fff; font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 15px; border-radius: 8px; margin-bottom: 24px;">
-          ${otp}
-        </div>
-        <p style="color: #999; font-size: 13px;">If you didn't request a password reset, you can safely ignore this email.</p>
-      </div>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
-}
-
-// Unified module exports configuration
-module.exports = { 
-  sendOtpEmail, 
-  sendOrderConfirmationEmail, 
-  sendResetOtpEmail 
-};
-</file>
-
-<file path="my-react-app/src/App.jsx">
-import { BrowserRouter as Router } from "react-router-dom"; // or your other imports
-import axios from "axios";
-
-// ⚡ Global Axios Configuration
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "";
-axios.defaults.withCredentials = true;
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import PageLoader from "./components/PageLoader";
-
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import SellerDashboard from "./pages/SellerDashboard";
-import AddProduct from "./pages/AddProduct";
-import ProductDetails from "./pages/ProductDetails";
-import SearchResults from "./pages/SearchResults";
-import CreateDeal from "./pages/CreateDeal";
-import MyDeals from "./pages/MyDeals";
-import Account from "./pages/Account";
-import Cart from "./pages/Cart";
-import Wishlist from "./pages/WishList";
-import HelpCenter from "./pages/HelpCenter";
-import ContactUs from "./pages/ContactUs";
-import FAQs from "./pages/FAQs";
-
-// ✅ One reusable component replaces 7 near-identical category pages
-import CategoryPage from "./pages/CategoryPage";
-
-import ElectronicsOffer from "./pages/offers/ElectronicsOffer";
-import BeautyOffer from "./pages/offers/BeautyOffer";
-import KitchenOffer from "./pages/offers/KitchenOffer";
-import FashionOffer from "./pages/offers/FashionOffer";
-import SportsOffer from "./pages/offers/SportsOffer";
-import BoatOffer from "./pages/offers/BoatOffer";
-
-// Category page config
-const CATEGORIES = [
-  {
-    paths: ["/electronics", "/Electronics"],
-    props: {
-      categoryKey: "electronics",
-      label: "Electronics & Gadgets",
-      emoji: "💻",
-      gradient: "linear-gradient(135deg,#0f172a,#1e293b,#0f172a)",
-      description: "Group deals on headphones, smartwatches, keyboards, and more.",
-      dealEmoji: "🔥",
-    },
-  },
-  {
-    paths: ["/home-kitchen", "/HomeKitchen"],
-    props: {
-      categoryKey: "home-kitchen",
-      label: "Home & Kitchen",
-      emoji: "🏠",
-      gradient: "linear-gradient(135deg,#78350f,#92400e,#78350f)",
-      description: "Pool orders on cookware, furniture, and storage.",
-      dealEmoji: "🏠",
-    },
-  },
-  {
-    paths: ["/beauty", "/Beauty"],
-    props: {
-      categoryKey: "beauty",
-      label: "Beauty & Personal Care",
-      emoji: "💄",
-      gradient: "linear-gradient(135deg,#be185d,#db2777,#be185d)",
-      description: "Discover skincare, cosmetics, and beauty savings.",
-      dealEmoji: "💄",
-    },
-  },
-  {
-    paths: ["/clothing", "/Clothing"],
-    props: {
-      categoryKey: "clothing",
-      label: "Clothing, Shoes & Jewelry",
-      emoji: "👕",
-      gradient: "linear-gradient(135deg,#7c2d12,#b45309,#7c2d12)",
-      description: "Community volume orders on fashion lines.",
-      dealEmoji: "👕",
-    },
-  },
-  {
-    paths: ["/health", "/Health"],
-    props: {
-      categoryKey: "health",
-      label: "Health & Household",
-      emoji: "🏥",
-      gradient: "linear-gradient(135deg,#166534,#22c55e,#166534)",
-      description: "Wholesale pricing on daily wellness products.",
-      dealEmoji: "🏥",
-    },
-  },
-  {
-    paths: ["/sports", "/Sports"],
-    props: {
-      categoryKey: "sports",
-      label: "Sports & Outdoors",
-      emoji: "⚽",
-      gradient: "linear-gradient(135deg,#0f766e,#14b8a6,#0f766e)",
-      description: "Factory discounts on gear with your fitness group.",
-      dealEmoji: "🏆",
-    },
-  },
-  {
-    paths: ["/toysbooks", "/ToysBooks"],
-    props: {
-      categoryKey: "toys-books",
-      label: "Toys, Games & Books",
-      emoji: "📚",
-      gradient: "linear-gradient(135deg,#7e22ce,#a855f7,#7e22ce)",
-      description: "Group price cuts on learning sets and reading bundles.",
-      dealEmoji: "📚",
-    },
-  },
-];
-
-function App() {
-  return (
-    <BrowserRouter>
-    <PageLoader>
-      <Routes>
-        {/* Core Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/account" element={<Account />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/search" element={<SearchResults />} />
-
-        {/* Seller Routes */}
-        <Route path="/SellerDashboard" element={<SellerDashboard />} />
-        <Route path="/AddProduct" element={<AddProduct />} />
-        <Route path="/CreateDeal" element={<CreateDeal />} />
-        <Route path="/MyDeals" element={<MyDeals />} />
-
-        {/* Product / Deal Detail */}
-        <Route path="/product/:id" element={<ProductDetails />} />
-
-        {/* ✅ Dynamic category routes — generated from config array */}
-        {CATEGORIES.map(({ paths, props }) =>
-          paths.map((path) => (
-            <Route key={path} path={path} element={<CategoryPage {...props} />} />
-          ))
-        )}
-
-        {/* Offer Pages */}
-        <Route path="/offers/ElectronicsOffer" element={<ElectronicsOffer />} />
-        <Route path="/offers/BeautyOffer" element={<BeautyOffer />} />
-        <Route path="/offers/KitchenOffer" element={<KitchenOffer />} />
-        <Route path="/offers/FashionOffer" element={<FashionOffer />} />
-        <Route path="/offers/SportsOffer" element={<SportsOffer />} />
-        <Route path="/offers/BoatOffer" element={<BoatOffer />} />
-        <Route path="/help-center" element={<HelpCenter />} />
-<Route path="/contact-us" element={<ContactUs />} />
-<Route path="/faqs" element={<FAQs />} />
-      </Routes>
-      </PageLoader>
-    </BrowserRouter>
-  );
-}
-
-export default App;
 </file>
 
 <file path="my-react-app/src/components/CategoryDealCard.jsx">
@@ -7559,447 +7275,197 @@ function Wishlist() {
 export default Wishlist;
 </file>
 
-<file path="my-react-app/src/components/CategoryNavbar.jsx">
-import { Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
+<file path="my-react-app/vite.config.js">
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
-// Maps DB enum values → display config
-const CATEGORY_META = {
-  electronics:   { label: "Electronics",   emoji: "💻", path: "/electronics"   },
-  "home-kitchen": { label: "Home & Kitchen", emoji: "🏠", path: "/home-kitchen" },
-  beauty:       { label: "Beauty",         emoji: "💄", path: "/beauty"        },
-  clothing:     { label: "Clothing",       emoji: "👕", path: "/clothing"      },
-  health:       { label: "Health",         emoji: "🏥", path: "/health"        },
-  sports:       { label: "Sports",         emoji: "⚽", path: "/sports"        },
-  "toys-books": { label: "Toys & Books",   emoji: "📚", path: "/toysbooks"    },
-};
-
-// Fallback order if DB returns no counts
-const FALLBACK_ORDER = Object.keys(CATEGORY_META);
-
-function CategoryNavbar() {
-  const location = useLocation();
-  const [categories, setCategories] = useState(FALLBACK_ORDER.map((k) => ({ key: k, count: 0 })));
-  const [loading, setLoading] = useState(true);
-
-  // Dynamically points to your live Render environment URL or local dev server
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-
-  useEffect(() => {
-    // Fetch product category stats using production environment variables
-    axios
-      .get(`${API_BASE_URL}/products/categories/stats`)
-      .then((res) => {
-        if (res.data.success) {
-          // Merge DB counts with meta, keep all 7 categories even if count=0
-          const dbMap = {};
-          res.data.categories.forEach((c) => { dbMap[c._id] = c.count; });
-
-          const merged = FALLBACK_ORDER.map((key) => ({
-            key,
-            count: dbMap[key] || 0,
-          }));
-          // Sort by count desc but keep all 7
-          merged.sort((a, b) => b.count - a.count);
-          setCategories(merged);
-        }
-      })
-      .catch(() => {
-        // silently keep fallback
-      })
-      .finally(() => setLoading(false));
-  }, [API_BASE_URL]);
-
-  const isActive = (path) =>
-    location.pathname.toLowerCase() === path.toLowerCase() ||
-    location.pathname.toLowerCase().startsWith(path.toLowerCase() + "/");
-
-  return (
-    <nav
-      className="border-bottom bg-white navbar navbar-expand py-1"
-      style={{ 
-        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-        zIndex: 999 
-      }}
-    >
-      {/* Changes: Swapped 'flex-wrap' with 'flex-nowrap' and added 'overflow-x-auto'.
-        Swapped 'justify-content-center' to shift elements cleanly while scrolling on small phone viewports.
-      */}
-      <div
-        className="container-fluid justify-content-start justify-content-md-center d-flex align-items-center flex-nowrap gap-1 overflow-x-auto px-2"
-        style={{ 
-          whiteSpace: "nowrap",
-          scrollbarWidth: "none",            /* Firefox */
-          msOverflowStyle: "none",           /* IE/Edge */
-          WebkitOverflowScrolling: "touch"  /* Smooth iOS momentum swipe momentum */
-        }}
-      >
-        {/* Hides native webkit scroll tracks for a clean aesthetic */}
-        <style>{`
-          .container-fluid::-webkit-scrollbar {
-            display: none !important;
-          }
-        `}</style>
-
-        {categories.map(({ key, count }) => {
-          const meta = CATEGORY_META[key];
-          if (!meta) return null;
-          const active = isActive(meta.path);
-
-          return (
-            <Link
-              key={key}
-              to={meta.path}
-              className="text-decoration-none d-flex flex-column align-items-center justify-content-center text-center px-2 py-2 flex-shrink-0 category-navbar-item"
-              style={{
-                borderBottom: active ? "2px solid #198754" : "2px solid transparent",
-                color: active ? "#198754" : "#555",
-                fontWeight: active ? "600" : "400",
-                fontSize: "12px",
-                transition: "all 0.15s",
-                minWidth: "85px",
-              }}
-              onMouseEnter={(e) => {
-                if (!active) e.currentTarget.style.borderBottomColor = "#aaa";
-              }}
-              onMouseLeave={(e) => {
-                if (!active) e.currentTarget.style.borderBottomColor = "transparent";
-              }}
-            >
-              <span style={{ fontSize: "18px", lineHeight: 1 }}>{meta.emoji}</span>
-              <span className="mt-1" style={{ maxWidth: "100px", lineHeight: "1.2" }}>
-                {meta.label}
-              </span>
-              {count > 0 && (
-                <span
-                  className="badge mt-1"
-                  style={{
-                    fontSize: "9px",
-                    backgroundColor: active ? "#198754" : "#e9ecef",
-                    color: active ? "#fff" : "#666",
-                    padding: "1px 5px",
-                  }}
-                >
-                  {count}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
-export default CategoryNavbar;
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    watch: {
+      usePolling: true, // Forces Vite to watch for your React code changes
+    },
+    proxy: {
+      // Lets relative "/api/..." calls work in local dev even with no VITE_API_BASE_URL set,
+      // matching the same relative-path behavior used in production.
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
+})
 </file>
 
-<file path="my-react-app/src/pages/Home.jsx">
-import Navbar from "../components/Navbar";
-import CategoryCard from "../components/CategoryCard";
-import CategoryNavbar from "../components/CategoryNavbar";
-import Footer from "../components/Footer";
-import DealCard from "../components/DealCard";
-import ProductCard from "../components/ProductCard";
-import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+<file path="my-react-app/src/App.jsx">
 import axios from "axios";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import PageLoader from "./components/PageLoader";
 
-function Home() {
-  const [deals, setDeals] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loadingDeals, setLoadingDeals] = useState(true);
+// ⚡ Global Axios Configuration (Normalized Base Path)
+const rawBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+axios.defaults.baseURL = rawBase
+  ? (rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`)
+  : "/api";
+axios.defaults.withCredentials = true;
 
-  // Dynamically uses your live Render URL in production, defaults to local host during development
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+// Page Imports
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import SellerDashboard from "./pages/SellerDashboard";
+import AddProduct from "./pages/AddProduct";
+import ProductDetails from "./pages/ProductDetails";
+import SearchResults from "./pages/SearchResults";
+import CreateDeal from "./pages/CreateDeal";
+import MyDeals from "./pages/MyDeals";
+import Account from "./pages/Account";
+import Cart from "./pages/Cart";
+import Wishlist from "./pages/WishList";
+import HelpCenter from "./pages/HelpCenter";
+import ContactUs from "./pages/ContactUs";
+import FAQs from "./pages/FAQs";
 
-  useEffect(() => {
-    // Upgraded to pull data seamlessly from your live production cluster
-    Promise.all([
-      axios.get(`${API_BASE_URL}/deals`),
-      axios.get(`${API_BASE_URL}/products`),
-    ])
-      .then(([dealRes, prodRes]) => {
-        if (dealRes.data.success && Array.isArray(dealRes.data.deals)) {
-          setDeals(dealRes.data.deals);
-        }
-        if (prodRes.data.success && Array.isArray(prodRes.data.products)) {
-          setProducts(prodRes.data.products);
-        }
-      })
-      .catch((err) => console.error("Database fetch failed on deployment sequence:", err))
-      .finally(() => setLoadingDeals(false));
-  }, [API_BASE_URL]);
+// Reusable dynamic category layer
+import CategoryPage from "./pages/CategoryPage";
 
-  const activeDealsOnly = deals.filter((d) => d && d.status === "active" && d.title);
+// Offer Page Imports
+import ElectronicsOffer from "./pages/offers/ElectronicsOffer";
+import BeautyOffer from "./pages/offers/BeautyOffer";
+import KitchenOffer from "./pages/offers/KitchenOffer";
+import FashionOffer from "./pages/offers/FashionOffer";
+import SportsOffer from "./pages/offers/SportsOffer";
+import BoatOffer from "./pages/offers/BoatOffer";
 
-  const endingSoonDeals = [...activeDealsOnly]
-    .sort((a, b) => (a.daysLeft ?? 0) - (b.daysLeft ?? 0))
-    .slice(0, 3);
-
-  const popularDeals = [...activeDealsOnly]
-    .sort((a, b) => (b.joinedUsers ?? 0) - (a.joinedUsers ?? 0))
-    .slice(0, 3);
-
-  const filteredDeals = activeDealsOnly.filter((d) =>
-    d.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const filteredProducts = products.filter((p) =>
-    p && p.title && p.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const categoryCards = [
-    {
-      title: "Top Electronics | Up to 55% off",
-      items: [
-        { image: "/earph.jpg", label: "Headphones" },
-        { image: "/smartw.jpg", label: "Smart Watch" },
-        { image: "/key.jpg", label: "Keyboard" },
-        { image: "/mouse.avif", label: "Mouse" },
-      ],
+// Category configuration matrix
+const CATEGORIES = [
+  {
+    paths: ["/electronics", "/Electronics"],
+    props: {
+      categoryKey: "electronics",
+      label: "Electronics & Gadgets",
+      emoji: "💻",
+      gradient: "linear-gradient(135deg,#0f172a,#1e293b,#0f172a)",
+      description: "Group deals on headphones, smartwatches, keyboards, and more.",
+      dealEmoji: "🔥",
     },
-    {
-      title: "Upgrade your kitchen | Up to 50% off",
-      items: [
-        { image: "/cookware.jpg", label: "Cookware" },
-        { image: "/mixer.jpg", label: "Mixer" },
-        { image: "/store.jpg", label: "Storage" },
-        { image: "/furniture.jpg", label: "Furniture" },
-      ],
+  },
+  {
+    paths: ["/home-kitchen", "/HomeKitchen"],
+    props: {
+      categoryKey: "home-kitchen",
+      label: "Home & Kitchen",
+      emoji: "🏠",
+      gradient: "linear-gradient(135deg,#78350f,#92400e,#78350f)",
+      description: "Pool orders on cookware, furniture, and storage.",
+      dealEmoji: "🏠",
     },
-    {
-      title: "Fashion picks | Up to 70% off",
-      items: [
-        { image: "/shoe.jpg", label: "Shoes" },
-        { image: "/dumbells.jpg", label: "Dumbbells" },
-        { image: "/bicyle.jpg", label: "Bicycle" },
-        { image: "/football.jpg", label: "Football" },
-      ],
+  },
+  {
+    paths: ["/beauty", "/Beauty"],
+    props: {
+      categoryKey: "beauty",
+      label: "Beauty & Personal Care",
+      emoji: "💄",
+      gradient: "linear-gradient(135deg,#be185d,#db2777,#be185d)",
+      description: "Discover skincare, cosmetics, and beauty savings.",
+      dealEmoji: "💄",
     },
-  ];
+  },
+  {
+    paths: ["/clothing", "/Clothing"],
+    props: {
+      categoryKey: "clothing",
+      label: "Clothing, Shoes & Jewelry",
+      emoji: "👕",
+      gradient: "linear-gradient(135deg,#7c2d12,#b45309,#7c2d12)",
+      description: "Community volume orders on fashion lines.",
+      dealEmoji: "👕",
+    },
+  },
+  {
+    paths: ["/health", "/Health"],
+    props: {
+      categoryKey: "health",
+      label: "Health & Household",
+      emoji: "🏥",
+      gradient: "linear-gradient(135deg,#166534,#22c55e,#166534)",
+      description: "Wholesale pricing on daily wellness products.",
+      dealEmoji: "🏥",
+    },
+  },
+  {
+    paths: ["/sports", "/Sports"],
+    props: {
+      categoryKey: "sports",
+      label: "Sports & Outdoors",
+      emoji: "⚽",
+      gradient: "linear-gradient(135deg,#0f766e,#14b8a6,#0f766e)",
+      description: "Factory discounts on gear with your fitness group.",
+      dealEmoji: "🏆",
+    },
+  },
+  {
+    paths: ["/toysbooks", "/ToysBooks"],
+    props: {
+      categoryKey: "toys-books",
+      label: "Toys, Games & Books",
+      emoji: "📚",
+      gradient: "linear-gradient(135deg,#7e22ce,#a855f7,#7e22ce)",
+      description: "Group price cuts on learning sets and reading bundles.",
+      dealEmoji: "📚",
+    },
+  },
+];
 
-  const DealRow = ({ list, emptyMsg }) =>
-    list.length === 0 ? (
-      <div className="text-center py-5 bg-light rounded-3 border border-dashed">
-        <p className="text-muted m-0 fw-medium">{emptyMsg}</p>
-      </div>
-    ) : (
-      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {list.map((deal) => (
-          <div key={deal._id} className="col">
-            <DealCard
-              id={deal._id}
-              title={deal.title}
-              image={deal.image}
-              originalPrice={deal.originalPrice}
-              tiers={deal.tiers}
-              activeTierPrice={deal.activeTierPrice}
-              joined={deal.joinedUsers}
-              target={deal.targetMembers}
-              seller={deal.seller}
-              daysLeft={deal.daysLeft}
-            />
-          </div>
-        ))}
-      </div>
-    );
-
+function App() {
   return (
-    <>
-      <Navbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <CategoryNavbar />
+    <BrowserRouter>
+      <PageLoader>
+        <Routes>
+          {/* Core Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/search" element={<SearchResults />} />
 
-      {/* OFFER CAROUSEL */}
-      <div
-        id="offerCarousel"
-        className="carousel slide mb-4"
-        data-bs-ride="carousel"
-        data-bs-interval="3000"
-      >
-        <div className="carousel-inner">
-          <div className="carousel-item active">
-            <div className="container">
-              <div className="row g-3">
-                <div className="col-6">
-                  <Link to="/offers/ElectronicsOffer">
-                    <img src="/C1.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-                <div className="col-6">
-                  <Link to="/offers/BeautyOffer">
-                    <img src="/c2.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="carousel-item">
-            <div className="container">
-              <div className="row g-3">
-                <div className="col-6">
-                  <Link to="/offers/KitchenOffer">
-                    <img src="/c5.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-                <div className="col-6">
-                  <Link to="/offers/FashionOffer">
-                    <img src="/c3.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="carousel-item">
-            <div className="container">
-              <div className="row g-3">
-                <div className="col-6">
-                  <Link to="/offers/SportsOffer">
-                    <img src="/c4.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-                <div className="col-6">
-                  <Link to="/offers/BoatOffer">
-                    <img src="/boat.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button className="carousel-control-prev" type="button" data-bs-target="#offerCarousel" data-bs-slide="prev">
-          <span className="carousel-control-prev-icon" />
-        </button>
-        <button className="carousel-control-next" type="button" data-bs-target="#offerCarousel" data-bs-slide="next">
-          <span className="carousel-control-next-icon" />
-        </button>
-      </div>
+          {/* Seller Routes */}
+          <Route path="/SellerDashboard" element={<SellerDashboard />} />
+          <Route path="/AddProduct" element={<AddProduct />} />
+          <Route path="/CreateDeal" element={<CreateDeal />} />
+          <Route path="/MyDeals" element={<MyDeals />} />
 
-      <div className="container mt-4">
+          {/* Product / Deal Detail */}
+          <Route path="/product/:id" element={<ProductDetails />} />
 
-        {/* HERO */}
-        <div className="text-center mb-5 py-4">
-          <h1 className="display-4 fw-bold">Buy Together, Save More</h1>
-          <p className="lead text-muted">Join group purchases and unlock exclusive discounts.</p>
-          
-          {/* FIX: Standardized into a clean responsive flexbox structure */}
-          <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-center mt-4 px-3 mx-auto" style={{ maxWidth: "480px" }}>
-            <Link 
-              to="/electronics" 
-              className="btn btn-dark btn-lg w-100 w-sm-auto px-4 py-2" 
-              style={{ borderRadius: "8px", fontSize: "16px", fontWeight: "500" }}
-            >
-              Explore Categories
-            </Link>
-            <Link 
-              to="/search?q=" 
-              className="btn btn-outline-success btn-lg w-100 w-sm-auto px-4 py-2" 
-              style={{ borderRadius: "8px", fontSize: "16px", fontWeight: "500" }}
-            >
-              Browse All Deals
-            </Link>
-          </div>
-        </div>
+          {/* Dynamic category routes */}
+          {CATEGORIES.map(({ paths, props }) =>
+            paths.map((path) => (
+              <Route key={path} path={path} element={<CategoryPage {...props} />} />
+            ))
+          )}
 
-        {/* CATEGORY CARDS */}
-        <div className="row mb-5">
-          {categoryCards.map((cat, i) => (
-            <div key={i} className="col-lg-4 col-md-6 mb-4 d-flex justify-content-center">
-              <CategoryCard title={cat.title} items={cat.items} linkText="Explore Deals" />
-            </div>
-          ))}
-        </div>
-
-        <hr className="my-5 opacity-25" />
-
-        {/* LATEST PRODUCTS */}
-        {filteredProducts.length > 0 && (
-          <>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h2 className="fw-bold text-dark mb-0">🛍️ Latest Products</h2>
-              <Link to="/electronics" className="btn btn-sm btn-outline-dark">View All →</Link>
-            </div>
-            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
-              {filteredProducts.slice(0, 8).map((product) => (
-                <div key={product._id} className="col">
-                  <ProductCard
-                    id={product._id}
-                    title={product.title}
-                    image={product.image}
-                    price={product.price}
-                    category={product.category}
-                    seller={product.seller}
-                    stock={product.stock}
-                  />
-                </div>
-              ))}
-            </div>
-            <hr className="my-5 opacity-25" />
-          </>
-        )}
-
-        {/* TRENDING GROUP DEALS */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold text-dark mb-0">🔥 Trending Group Deals</h2>
-          <Link to="/search?q=" className="btn btn-sm btn-outline-success">View All →</Link>
-        </div>
-        {loadingDeals ? (
-          <div className="text-center py-5"><div className="spinner-border text-success" /></div>
-        ) : (
-          <DealRow
-            list={filteredDeals.slice(0, 6)}
-            emptyMsg={searchTerm ? `No deals match "${searchTerm}"` : "No active deals yet. Check back soon!"}
-          />
-        )}
-
-        {/* MOST POPULAR */}
-        {popularDeals.length > 0 && (
-          <>
-            <h2 className="mb-4 mt-5 fw-bold text-dark">👥 Most Popular Deals</h2>
-            <DealRow list={popularDeals} emptyMsg="No popular deals yet." />
-          </>
-        )}
-
-        {/* DEALS ENDING SOON */}
-        {endingSoonDeals.length > 0 && (
-          <>
-            <h2 className="mb-4 mt-5 fw-bold text-dark">⏰ Deals Ending Soon</h2>
-            <DealRow list={endingSoonDeals} emptyMsg="No deals approaching their deadline right now." />
-          </>
-        )}
-
-        {/* WHY GROUPBUY */}
-        <div className="bg-dark text-white p-5 rounded-4 mt-5 mb-5 shadow-sm">
-          <h2 className="text-center mb-5 fw-bold">Why Choose GroupBuy?</h2>
-          <div className="row text-center">
-            <div className="col-md-4 mb-3">
-              <div className="fs-1 mb-2">💰</div>
-              <h4 className="fw-bold text-success">Save More</h4>
-              <p className="text-secondary">Unlock major discounts through group orders.</p>
-            </div>
-            <div className="col-md-4 mb-3">
-              <div className="fs-1 mb-2">🤝</div>
-              <h4 className="fw-bold text-info">Buy Together</h4>
-              <p className="text-secondary">Team up with buyers to hit deal thresholds fast.</p>
-            </div>
-            <div className="col-md-4 mb-3">
-              <div className="fs-1 mb-2">🚚</div>
-              <h4 className="fw-bold text-warning">Trusted Sellers</h4>
-              <p className="text-secondary">Every seller undergoes strict verification.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <Footer />
-    </>
+          {/* Offer Pages */}
+          <Route path="/offers/ElectronicsOffer" element={<ElectronicsOffer />} />
+          <Route path="/offers/BeautyOffer" element={<BeautyOffer />} />
+          <Route path="/offers/KitchenOffer" element={<KitchenOffer />} />
+          <Route path="/offers/FashionOffer" element={<FashionOffer />} />
+          <Route path="/offers/SportsOffer" element={<SportsOffer />} />
+          <Route path="/offers/BoatOffer" element={<BoatOffer />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/faqs" element={<FAQs />} />
+        </Routes>
+      </PageLoader>
+    </BrowserRouter>
   );
 }
 
-export default Home;
+export default App;
 </file>
 
 <file path="my-react-app/src/pages/Signup.jsx">
@@ -8431,224 +7897,129 @@ function Signup() {
 export default Signup;
 </file>
 
-<file path="my-react-app/src/components/Navbar.jsx">
-import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+<file path="my-react-app/src/components/CategoryNavbar.jsx">
+import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import GroupBuyOffcanvas from "./GroupBuyOffCanvas";
 
-function Navbar({ searchTerm, setSearchTerm }) {
-  const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
+const CATEGORY_META = {
+  electronics:   { label: "Electronics",   emoji: "💻", path: "/electronics"   },
+  "home-kitchen": { label: "Home & Kitchen", emoji: "🏠", path: "/home-kitchen" },
+  beauty:       { label: "Beauty",         emoji: "💄", path: "/beauty"        },
+  clothing:     { label: "Clothing",       emoji: "👕", path: "/clothing"      },
+  health:       { label: "Health",         emoji: "🏥", path: "/health"        },
+  sports:       { label: "Sports",         emoji: "⚽", path: "/sports"        },
+  "toys-books": { label: "Toys & Books",   emoji: "📚", path: "/toysbooks"    },
+};
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("token");
+const FALLBACK_ORDER = Object.keys(CATEGORY_META);
 
-  // Dynamically uses your live Render URL in production, defaults to local host during development
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+function CategoryNavbar() {
+  const location = useLocation();
+  const [categories, setCategories] = useState(FALLBACK_ORDER.map((k) => ({ key: k, count: 0 })));
+  const [loading, setLoading] = useState(true);
 
-  // Fetch cart + wishlist counts on mount (if logged in)
   useEffect(() => {
-    if (!user || !token) return;
-
+    // ✅ Clean & Relative: Prepends the centralized baseURL automatically
     axios
-      .get(`${API_BASE_URL}/cart`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get("/products/categories/stats")
       .then((res) => {
         if (res.data.success) {
-          const items = res.data.cart?.items || [];
-          setCartCount(items.reduce((sum, i) => sum + i.quantity, 0));
+          const dbMap = {};
+          res.data.categories.forEach((c) => { dbMap[c._id] = c.count; });
+
+          const merged = FALLBACK_ORDER.map((key) => ({
+            key,
+            count: dbMap[key] || 0,
+          }));
+          merged.sort((a, b) => b.count - a.count);
+          setCategories(merged);
         }
       })
-      .catch(() => {});
-
-    axios
-      .get(`${API_BASE_URL}/wishlist`, {
-        headers: { Authorization: `Bearer ${token}` },
+      .catch(() => {
+        // silently keep fallback
       })
-      .then((res) => {
-        if (res.data.success) {
-          const items = res.data.wishlist?.products || [];
-          setWishlistCount(items.length);
-        }
-      })
-      .catch(() => {});
-  }, [API_BASE_URL]);
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/";
-  };
+  const isActive = (path) =>
+    location.pathname.toLowerCase() === path.toLowerCase() ||
+    location.pathname.toLowerCase().startsWith(path.toLowerCase() + "/");
 
   return (
-    <>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-sm">
-        {/* Added 'flex-nowrap' to force all elements to stay strictly on one horizontal row on mobile */}
-        <div className="container-fluid px-3 flex-nowrap justify-content-between align-items-center">
-          
-          {/* Left: Menu Side Trigger Button */}
-          <button
-            className="btn btn-outline-light me-1 border-0 px-2"
-            style={{ fontSize: "20px" }}
-            onClick={() => setIsOpen(true)}
-            type="button"
-          >
-            ☰
-          </button>
+    <nav
+      className="border-bottom bg-white navbar navbar-expand py-1"
+      style={{ 
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+        zIndex: 999 
+      }}
+    >
+      <div
+        className="container-fluid justify-content-start justify-content-md-center d-flex align-items-center flex-nowrap gap-1 overflow-x-auto px-2"
+        style={{ 
+          whiteSpace: "nowrap",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch"
+        }}
+      >
+        <style>{`
+          .container-fluid::-webkit-scrollbar {
+            display: none !important;
+          }
+        `}</style>
 
-          {/* Center-Left: Brand Logo (Slightly responsive height max for clean display) */}
-          <Link className="navbar-brand fw-bold me-auto ms-1" to="/">
-            <img src="/title.png" alt="GroupBuy" style={{ height: "clamp(30px, 4.5vw, 42px)", objectFit: "contain" }} />
-          </Link>
+        {categories.map(({ key, count }) => {
+          const meta = CATEGORY_META[key];
+          if (!meta) return null;
+          const active = isActive(meta.path);
 
-          {/* Right: Mobile Collapse Toggle Button */}
-          <button
-            className="navbar-toggler border-0 px-2 ms-2"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarMain"
-            aria-controls="navbarMain"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon" />
-          </button>
-
-          {/* Collapsible content (Search + Actions) */}
-          <div className="collapse navbar-collapse" id="navbarMain">
-            {/* Search Bar */}
-            <form
-              className="d-flex mx-auto my-2 my-lg-0"
-              style={{ width: "min(520px, 100%)" }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = searchTerm?.trim();
-                if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+          return (
+            <Link
+              key={key}
+              to={meta.path}
+              className="text-decoration-none d-flex flex-column align-items-center justify-content-center text-center px-2 py-2 flex-shrink-0 category-navbar-item"
+              style={{
+                borderBottom: active ? "2px solid #198754" : "2px solid transparent",
+                color: active ? "#198754" : "#555",
+                fontWeight: active ? "600" : "400",
+                fontSize: "12px",
+                transition: "all 0.15s",
+                minWidth: "85px",
+              }}
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.borderBottomColor = "#aaa";
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.borderBottomColor = "transparent";
               }}
             >
-              <div className="input-group">
-                <input
-                  className="form-control border-0 bg-white"
-                  type="text"
-                  placeholder="Search products, deals, categories..."
-                  value={setSearchTerm ? (searchTerm || "") : ""} 
-                  onChange={(e) => {
-                    if (setSearchTerm) {
-                      setSearchTerm(e.target.value);
-                    }
+              <span style={{ fontSize: "18px", lineHeight: 1 }}>{meta.emoji}</span>
+              <span className="mt-1" style={{ maxWidth: "100px", lineHeight: "1.2" }}>
+                {meta.label}
+              </span>
+              {count > 0 && (
+                <span
+                  className="badge mt-1"
+                  style={{
+                    fontSize: "9px",
+                    backgroundColor: active ? "#198754" : "#e9ecef",
+                    color: active ? "#fff" : "#666",
+                    padding: "1px 5px",
                   }}
-                  style={{ borderRadius: "8px 0 0 8px" }}
-                />
-                <button
-                  className="btn btn-success px-3"
-                  type="submit"
-                  style={{ borderRadius: "0 8px 8px 0" }}
                 >
-                  🔍
-                </button>
-              </div>
-            </form>
-
-            {/* Right Side Navigation Actions */}
-            <ul className="navbar-nav ms-auto align-items-center gap-1 w-100 justify-content-end flex-row flex-wrap mt-2 mt-lg-0">
-              {user ? (
-                <>
-                  {/* Cart Icon */}
-                  <li className="nav-item">
-                    <Link
-                      className="nav-link position-relative px-2 mx-1"
-                      to="/cart"
-                      title="Cart"
-                    >
-                      <span style={{ fontSize: "20px" }}>🛒</span>
-                      {cartCount > 0 && (
-                        <span
-                          className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                          style={{ fontSize: "10px" }}
-                        >
-                          {cartCount > 99 ? "99+" : cartCount}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-
-                  {/* Wishlist Icon */}
-                  <li className="nav-item">
-                    <Link
-                      className="nav-link position-relative px-2 mx-1"
-                      to="/wishlist"
-                      title="Wishlist"
-                    >
-                      <span style={{ fontSize: "20px" }}>❤️</span>
-                      {wishlistCount > 0 && (
-                        <span
-                          className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                          style={{ fontSize: "10px" }}
-                        >
-                          {wishlistCount}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-
-                  {/* User Greeting */}
-                  <li className="nav-item">
-                    <Link className="nav-link fw-semibold text-light px-2" to="/account">
-                      👤 {user.name?.split(" ")[0]}
-                    </Link>
-                  </li>
-
-                  {user.role === "seller" && (
-                    <li className="nav-item">
-                      <Link
-                        className="btn btn-outline-warning btn-sm ms-1 my-1"
-                        to="/SellerDashboard"
-                        style={{ borderRadius: "8px" }}
-                      >
-                        Dashboard
-                      </Link>
-                    </li>
-                  )}
-
-                  <li className="nav-item">
-                    <button
-                      className="btn btn-danger btn-sm ms-1 my-1"
-                      onClick={handleLogout}
-                      style={{ borderRadius: "8px" }}
-                    >
-                      Logout
-                    </button>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li className="nav-item">
-                    <Link className="btn btn-outline-light btn-sm me-1 my-1" to="/login" style={{ borderRadius: "8px" }}>
-                      Login
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="btn btn-success btn-sm my-1" to="/signup" style={{ borderRadius: "8px" }}>
-                      Sign Up
-                    </Link>
-                  </li>
-                </>
+                  {count}
+                </span>
               )}
-            </ul>
-          </div>
-        </div>
-      </nav>
-
-      <GroupBuyOffcanvas isOpen={isOpen} onClose={() => setIsOpen(false)} />
-    </>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
-export default Navbar;
+export default CategoryNavbar;
 </file>
 
 <file path="my-react-app/src/pages/AddProduct.jsx">
@@ -8869,6 +8240,642 @@ function AddProduct() {
 export default AddProduct;
 </file>
 
+<file path="my-react-app/src/pages/Home.jsx">
+import Navbar from "../components/Navbar";
+import CategoryCard from "../components/CategoryCard";
+import CategoryNavbar from "../components/CategoryNavbar";
+import Footer from "../components/Footer";
+import DealCard from "../components/DealCard";
+import ProductCard from "../components/ProductCard";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+function Home() {
+  const [deals, setDeals] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loadingDeals, setLoadingDeals] = useState(true);
+
+  // Dynamically uses your live Render URL in production, defaults to local host during development
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
+  useEffect(() => {
+    // ✅ Clean & Relative: axios automatically prepends the baseURL + /api from App.jsx
+    Promise.all([
+      axios.get("/deals"),
+      axios.get("/products"),
+    ])
+      .then(([dealRes, prodRes]) => {
+        if (dealRes.data.success && Array.isArray(dealRes.data.deals)) {
+          setDeals(dealRes.data.deals);
+        }
+        if (prodRes.data.success && Array.isArray(prodRes.data.products)) {
+          setProducts(prodRes.data.products);
+        }
+      })
+      .catch((err) => console.error("Database fetch failed on deployment sequence:", err))
+      .finally(() => setLoadingDeals(false));
+  }, []); 
+  
+  // ⚡ Dependency array is now empty because we don't rely on tracking API_BASE_URL anymore
+  const activeDealsOnly = deals.filter((d) => d && d.status === "active" && d.title);
+
+  const endingSoonDeals = [...activeDealsOnly]
+    .sort((a, b) => (a.daysLeft ?? 0) - (b.daysLeft ?? 0))
+    .slice(0, 3);
+
+  const popularDeals = [...activeDealsOnly]
+    .sort((a, b) => (b.joinedUsers ?? 0) - (a.joinedUsers ?? 0))
+    .slice(0, 3);
+
+  const filteredDeals = activeDealsOnly.filter((d) =>
+    d.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const filteredProducts = products.filter((p) =>
+    p && p.title && p.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const categoryCards = [
+    {
+      title: "Top Electronics | Up to 55% off",
+      items: [
+        { image: "/earph.jpg", label: "Headphones" },
+        { image: "/smartw.jpg", label: "Smart Watch" },
+        { image: "/key.jpg", label: "Keyboard" },
+        { image: "/mouse.avif", label: "Mouse" },
+      ],
+    },
+    {
+      title: "Upgrade your kitchen | Up to 50% off",
+      items: [
+        { image: "/cookware.jpg", label: "Cookware" },
+        { image: "/mixer.jpg", label: "Mixer" },
+        { image: "/store.jpg", label: "Storage" },
+        { image: "/furniture.jpg", label: "Furniture" },
+      ],
+    },
+    {
+      title: "Fashion picks | Up to 70% off",
+      items: [
+        { image: "/shoe.jpg", label: "Shoes" },
+        { image: "/dumbells.jpg", label: "Dumbbells" },
+        { image: "/bicyle.jpg", label: "Bicycle" },
+        { image: "/football.jpg", label: "Football" },
+      ],
+    },
+  ];
+
+  const DealRow = ({ list, emptyMsg }) =>
+    list.length === 0 ? (
+      <div className="text-center py-5 bg-light rounded-3 border border-dashed">
+        <p className="text-muted m-0 fw-medium">{emptyMsg}</p>
+      </div>
+    ) : (
+      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {list.map((deal) => (
+          <div key={deal._id} className="col">
+            <DealCard
+              id={deal._id}
+              title={deal.title}
+              image={deal.image}
+              originalPrice={deal.originalPrice}
+              tiers={deal.tiers}
+              activeTierPrice={deal.activeTierPrice}
+              joined={deal.joinedUsers}
+              target={deal.targetMembers}
+              seller={deal.seller}
+              daysLeft={deal.daysLeft}
+            />
+          </div>
+        ))}
+      </div>
+    );
+
+  return (
+    <>
+      <Navbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <CategoryNavbar />
+
+      {/* OFFER CAROUSEL */}
+      <div
+        id="offerCarousel"
+        className="carousel slide mb-4"
+        data-bs-ride="carousel"
+        data-bs-interval="3000"
+      >
+        <div className="carousel-inner">
+          <div className="carousel-item active">
+            <div className="container">
+              <div className="row g-3">
+                <div className="col-6">
+                  <Link to="/offers/ElectronicsOffer">
+                    <img src="/C1.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                  </Link>
+                </div>
+                <div className="col-6">
+                  <Link to="/offers/BeautyOffer">
+                    <img src="/c2.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="carousel-item">
+            <div className="container">
+              <div className="row g-3">
+                <div className="col-6">
+                  <Link to="/offers/KitchenOffer">
+                    <img src="/c5.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                  </Link>
+                </div>
+                <div className="col-6">
+                  <Link to="/offers/FashionOffer">
+                    <img src="/c3.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="carousel-item">
+            <div className="container">
+              <div className="row g-3">
+                <div className="col-6">
+                  <Link to="/offers/SportsOffer">
+                    <img src="/c4.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                  </Link>
+                </div>
+                <div className="col-6">
+                  <Link to="/offers/BoatOffer">
+                    <img src="/boat.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button className="carousel-control-prev" type="button" data-bs-target="#offerCarousel" data-bs-slide="prev">
+          <span className="carousel-control-prev-icon" />
+        </button>
+        <button className="carousel-control-next" type="button" data-bs-target="#offerCarousel" data-bs-slide="next">
+          <span className="carousel-control-next-icon" />
+        </button>
+      </div>
+
+      <div className="container mt-4">
+
+        {/* HERO */}
+        <div className="text-center mb-5 py-4">
+          <h1 className="display-4 fw-bold">Buy Together, Save More</h1>
+          <p className="lead text-muted">Join group purchases and unlock exclusive discounts.</p>
+          
+          {/* FIX: Standardized into a clean responsive flexbox structure */}
+          <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-center mt-4 px-3 mx-auto" style={{ maxWidth: "480px" }}>
+            <Link 
+              to="/electronics" 
+              className="btn btn-dark btn-lg w-100 w-sm-auto px-4 py-2" 
+              style={{ borderRadius: "8px", fontSize: "16px", fontWeight: "500" }}
+            >
+              Explore Categories
+            </Link>
+            <Link 
+              to="/search?q=" 
+              className="btn btn-outline-success btn-lg w-100 w-sm-auto px-4 py-2" 
+              style={{ borderRadius: "8px", fontSize: "16px", fontWeight: "500" }}
+            >
+              Browse All Deals
+            </Link>
+          </div>
+        </div>
+
+        {/* CATEGORY CARDS */}
+        <div className="row mb-5">
+          {categoryCards.map((cat, i) => (
+            <div key={i} className="col-lg-4 col-md-6 mb-4 d-flex justify-content-center">
+              <CategoryCard title={cat.title} items={cat.items} linkText="Explore Deals" />
+            </div>
+          ))}
+        </div>
+
+        <hr className="my-5 opacity-25" />
+
+        {/* LATEST PRODUCTS */}
+        {filteredProducts.length > 0 && (
+          <>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h2 className="fw-bold text-dark mb-0">🛍️ Latest Products</h2>
+              <Link to="/electronics" className="btn btn-sm btn-outline-dark">View All →</Link>
+            </div>
+            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+              {filteredProducts.slice(0, 8).map((product) => (
+                <div key={product._id} className="col">
+                  <ProductCard
+                    id={product._id}
+                    title={product.title}
+                    image={product.image}
+                    price={product.price}
+                    category={product.category}
+                    seller={product.seller}
+                    stock={product.stock}
+                  />
+                </div>
+              ))}
+            </div>
+            <hr className="my-5 opacity-25" />
+          </>
+        )}
+
+        {/* TRENDING GROUP DEALS */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2 className="fw-bold text-dark mb-0">🔥 Trending Group Deals</h2>
+          <Link to="/search?q=" className="btn btn-sm btn-outline-success">View All →</Link>
+        </div>
+        {loadingDeals ? (
+          <div className="text-center py-5"><div className="spinner-border text-success" /></div>
+        ) : (
+          <DealRow
+            list={filteredDeals.slice(0, 6)}
+            emptyMsg={searchTerm ? `No deals match "${searchTerm}"` : "No active deals yet. Check back soon!"}
+          />
+        )}
+
+        {/* MOST POPULAR */}
+        {popularDeals.length > 0 && (
+          <>
+            <h2 className="mb-4 mt-5 fw-bold text-dark">👥 Most Popular Deals</h2>
+            <DealRow list={popularDeals} emptyMsg="No popular deals yet." />
+          </>
+        )}
+
+        {/* DEALS ENDING SOON */}
+        {endingSoonDeals.length > 0 && (
+          <>
+            <h2 className="mb-4 mt-5 fw-bold text-dark">⏰ Deals Ending Soon</h2>
+            <DealRow list={endingSoonDeals} emptyMsg="No deals approaching their deadline right now." />
+          </>
+        )}
+
+        {/* WHY GROUPBUY */}
+        <div className="bg-dark text-white p-5 rounded-4 mt-5 mb-5 shadow-sm">
+          <h2 className="text-center mb-5 fw-bold">Why Choose GroupBuy?</h2>
+          <div className="row text-center">
+            <div className="col-md-4 mb-3">
+              <div className="fs-1 mb-2">💰</div>
+              <h4 className="fw-bold text-success">Save More</h4>
+              <p className="text-secondary">Unlock major discounts through group orders.</p>
+            </div>
+            <div className="col-md-4 mb-3">
+              <div className="fs-1 mb-2">🤝</div>
+              <h4 className="fw-bold text-info">Buy Together</h4>
+              <p className="text-secondary">Team up with buyers to hit deal thresholds fast.</p>
+            </div>
+            <div className="col-md-4 mb-3">
+              <div className="fs-1 mb-2">🚚</div>
+              <h4 className="fw-bold text-warning">Trusted Sellers</h4>
+              <p className="text-secondary">Every seller undergoes strict verification.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <Footer />
+    </>
+  );
+}
+
+export default Home;
+</file>
+
+<file path="GroupBy/utils/mailer.js">
+const nodemailer = require("nodemailer");
+const dns = require("dns");
+
+// ⚡ Hardened Nodemailer Transporter Configured for Cloud Egress Compatibility
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,        // Switched to 587 to leverage STARTTLS delivery channels
+  secure: false,    // Must remain false for port 587 protocol handshakes
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+    minVersion: "TLSv1.2" // Requires modern secure sockets layer compliance
+  },
+  // 🛰️ Strict IPv4 Enforcement: Intercepts connection lookups to ignore blocked cloud IPv6 blocks
+  lookup: (hostname, options, callback) => {
+    if (typeof options === "function") {
+      callback = options;
+      options = {};
+    }
+    return dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
+  },
+  // 🔧 Timeout Protection: Prevents the instance from hanging indefinitely during handshake bottlenecks
+  connectionTimeout: 10000, // Max wait threshold to open a TCP line (10 seconds)
+  greetingTimeout: 10000,   // Max wait threshold to receive initial SMTP greeting
+  socketTimeout: 10000,     // Max wait threshold to drop a stalled, inactive socket channel
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Send OTP Email (Signup Verification)
+// ─────────────────────────────────────────────────────────────────────────────
+async function sendOtpEmail(toEmail, otp) {
+  const mailOptions = {
+    from: `"GroupBuy" <${process.env.MAIL_USER}>`,
+    to: toEmail,
+    subject: "Your GroupBuy Email Verification OTP",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
+        <h2 style="color: #1a1a1a; margin-bottom: 8px;">Verify your email</h2>
+        <p style="color: #555; margin-bottom: 24px;">Use the code below to complete your GroupBuy registration. It expires in <strong>10 minutes</strong>.</p>
+        <div style="background: #212529; color: #fff; font-size: 36px; font-weight: bold; letter-spacing: 12px; text-align: center; padding: 20px 32px; border-radius: 8px; margin-bottom: 24px;">
+          ${otp}
+        </div>
+        <p style="color: #999; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Send Order Confirmation Email
+// ─────────────────────────────────────────────────────────────────────────────
+async function sendOrderConfirmationEmail(toEmail, order, product) {
+  const mailOptions = {
+    from: `"GroupBuy" <${process.env.MAIL_USER}>`,
+    to: toEmail,
+    subject: "Your GroupBuy Order Confirmation",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
+        <h2 style="color: #1a1a1a; margin-bottom: 8px;">Order Placed! 🎉</h2>
+        <p style="color: #555; margin-bottom: 24px;">Thanks for your order. Here are the details:</p>
+        <table style="width:100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr><td style="padding:6px 0; color:#777;">Product</td><td style="padding:6px 0; font-weight:bold;">${product?.title || "N/A"}</td></tr>
+          <tr><td style="padding:6px 0; color:#777;">Quantity</td><td style="padding:6px 0; font-weight:bold;">${order.quantity}</td></tr>
+          <tr><td style="padding:6px 0; color:#777;">Total</td><td style="padding:6px 0; font-weight:bold;">₹${order.totalPrice}</td></tr>
+          <tr><td style="padding:6px 0; color:#777;">Payment Mode</td><td style="padding:6px 0; font-weight:bold;">Cash on Delivery</td></tr>
+          <tr><td style="padding:6px 0; color:#777;">Shipping Address</td><td style="padding:6px 0; font-weight:bold;">${order.shippingAddress || "-"}</td></tr>
+        </table>
+        <p style="color: #999; font-size: 13px;">Order ID: ${order._id}</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Send Reset OTP Email (Password Recovery)
+// ─────────────────────────────────────────────────────────────────────────────
+async function sendResetOtpEmail(toEmail, otp) {
+  const mailOptions = {
+    from: `"GroupBuy Support" <${process.env.MAIL_USER}>`,
+    to: toEmail,
+    subject: "Reset Your GroupBuy Password",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
+        <h2 style="color: #dc3545; margin-bottom: 8px;">Password Reset Request</h2>
+        <p style="color: #555; margin-bottom: 24px;">Use the verification code below to update your password securely. This code expires in <strong>10 minutes</strong>.</p>
+        <div style="background: #212529; color: #fff; font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 15px; border-radius: 8px; margin-bottom: 24px;">
+          ${otp}
+        </div>
+        <p style="color: #999; font-size: 13px;">If you didn't request a password reset, you can safely ignore this email.</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+module.exports = { 
+  sendOtpEmail, 
+  sendOrderConfirmationEmail, 
+  sendResetOtpEmail 
+};
+</file>
+
+<file path="my-react-app/src/components/Navbar.jsx">
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import GroupBuyOffcanvas from "./GroupBuyOffCanvas";
+
+function Navbar({ searchTerm, setSearchTerm }) {
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+
+  // Fetch cart + wishlist counts on mount (if logged in)
+  useEffect(() => {
+    if (!user || !token) return;
+
+    // ✅ Clean & Relative: axios automatically prepends the baseURL from App.jsx
+    axios
+      .get("/cart", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const items = res.data.cart?.items || [];
+          setCartCount(items.reduce((sum, i) => sum + i.quantity, 0));
+        }
+      })
+      .catch(() => {});
+
+    axios
+      .get("/wishlist", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const items = res.data.wishlist?.products || [];
+          setWishlistCount(items.length);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  };
+
+  return (
+    <>
+      <nav className="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-sm">
+        <div className="container-fluid px-3 flex-nowrap justify-content-between align-items-center">
+          
+          {/* Left: Menu Side Trigger Button */}
+          <button
+            className="btn btn-outline-light me-1 border-0 px-2"
+            style={{ fontSize: "20px" }}
+            onClick={() => setIsOpen(true)}
+            type="button"
+          >
+            ☰
+          </button>
+
+          {/* Center-Left: Brand Logo */}
+          <Link className="navbar-brand fw-bold me-auto ms-1" to="/">
+            <img src="/title.png" alt="GroupBuy" style={{ height: "clamp(30px, 4.5vw, 42px)", objectFit: "contain" }} />
+          </Link>
+
+          {/* Right: Mobile Collapse Toggle Button */}
+          <button
+            className="navbar-toggler border-0 px-2 ms-2"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarMain"
+            aria-controls="navbarMain"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon" />
+          </button>
+
+          {/* Collapsible content (Search + Actions) */}
+          <div className="collapse navbar-collapse" id="navbarMain">
+            {/* Search Bar */}
+            <form
+              className="d-flex mx-auto my-2 my-lg-0"
+              style={{ width: "min(520px, 100%)" }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = searchTerm?.trim();
+                if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+              }}
+            >
+              <div className="input-group">
+                <input
+                  className="form-control border-0 bg-white"
+                  type="text"
+                  placeholder="Search products, deals, categories..."
+                  value={setSearchTerm ? (searchTerm || "") : ""} 
+                  onChange={(e) => {
+                    if (setSearchTerm) {
+                      setSearchTerm(e.target.value);
+                    }
+                  }}
+                  style={{ borderRadius: "8px 0 0 8px" }}
+                />
+                <button
+                  className="btn btn-success px-3"
+                  type="submit"
+                  style={{ borderRadius: "0 8px 8px 0" }}
+                >
+                  🔍
+                </button>
+              </div>
+            </form>
+
+            {/* Right Side Navigation Actions */}
+            <ul className="navbar-nav ms-auto align-items-center gap-1 w-100 justify-content-end flex-row flex-wrap mt-2 mt-lg-0">
+              {user ? (
+                <>
+                  {/* Cart Icon */}
+                  <li className="nav-item">
+                    <Link
+                      className="nav-link position-relative px-2 mx-1"
+                      to="/cart"
+                      title="Cart"
+                    >
+                      <span style={{ fontSize: "20px" }}>🛒</span>
+                      {cartCount > 0 && (
+                        <span
+                          className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                          style={{ fontSize: "10px" }}
+                        >
+                          {cartCount > 99 ? "99+" : cartCount}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+
+                  {/* Wishlist Icon */}
+                  <li className="nav-item">
+                    <Link
+                      className="nav-link position-relative px-2 mx-1"
+                      to="/wishlist"
+                      title="Wishlist"
+                    >
+                      <span style={{ fontSize: "20px" }}>❤️</span>
+                      {wishlistCount > 0 && (
+                        <span
+                          className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                          style={{ fontSize: "10px" }}
+                        >
+                          {wishlistCount}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+
+                  {/* User Greeting */}
+                  <li className="nav-item">
+                    <Link className="nav-link fw-semibold text-light px-2" to="/account">
+                      👤 {user.name?.split(" ")[0]}
+                    </Link>
+                  </li>
+
+                  {user.role === "seller" && (
+                    <li className="nav-item">
+                      <Link
+                        className="btn btn-outline-warning btn-sm ms-1 my-1"
+                        to="/SellerDashboard"
+                        style={{ borderRadius: "8px" }}
+                      >
+                        Dashboard
+                      </Link>
+                    </li>
+                  )}
+
+                  <li className="nav-item">
+                    <button
+                      className="btn btn-danger btn-sm ms-1 my-1"
+                      onClick={handleLogout}
+                      style={{ borderRadius: "8px" }}
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="nav-item">
+                    <Link className="btn btn-outline-light btn-sm me-1 my-1" to="/login" style={{ borderRadius: "8px" }}>
+                      Login
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="btn btn-success btn-sm my-1" to="/signup" style={{ borderRadius: "8px" }}>
+                      Sign Up
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <GroupBuyOffcanvas isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </>
+  );
+}
+
+export default Navbar;
+</file>
+
 <file path="my-react-app/src/pages/Login.jsx">
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -8876,11 +8883,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import axios from "axios";
 
-// Dynamically adapts between your live production URL on Vercel and local environment testing
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
-  ? `${import.meta.env.VITE_API_BASE_URL}/auth` 
-  : "/auth";
-const API = `${API_BASE_URL}/auth`;
+// ✅ Clean & Relative: App.jsx handles the base path prefix automatically
+const API = "/auth";
 
 function Login() {
   const navigate = useNavigate();
@@ -9185,7 +9189,6 @@ const app = express();
 connectDB();
 
 // 3. DEFINE CORS PERMISSIONS POLICY
-// 3. DEFINE CORS PERMISSIONS POLICY
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173", // standard Vite port
@@ -9201,22 +9204,30 @@ app.use(cors({
     // Check if the request comes from localhost or any Vercel domain variant
     const isLocalhost = origin.startsWith("http://localhost");
     const isVercelSubdomain = origin.endsWith(".vercel.app");
+    const isExplicitlyAllowed = allowedOrigins.includes(origin);
     
-    if (isLocalhost || isVercelSubdomain || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+    if (isLocalhost || isVercelSubdomain || isExplicitlyAllowed) {
+      return callback(null, true);
     }
+    
+    // ✅ Deny gracefully instead of throwing — avoids unhandled runtime crash loops
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Handle preflight requests globally
-
 // 5. PARSE REQUEST BODIES
 app.use(express.json());
+
+// ── SURFACES CRASHES IN RENDER LOGS INSTEAD OF SILENT PROCESS DEATH ───────────
+process.on("unhandledRejection", (reason) => {
+  console.error("[UNHANDLED REJECTION]", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[UNCAUGHT EXCEPTION]", err);
+});
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
