@@ -13,11 +13,13 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    // Verify token cryptographic signature
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // ✅ FIX: Match the environment fallback pattern (supports both JWT_SECRET and JWT_SECRETKEY)
+    const secret = process.env.JWT_SECRET || process.env.JWT_SECRETKEY;
+
+    // Verify token cryptographic signature using the resolved secret key
+    const decoded = jwt.verify(token, secret);
 
     // ✅ OPTIMIZATION: Pass token payload properties directly to the req object
-    // Saves a database query (User.findById) on every single protected API hit!
     req.user = {
       id: decoded.id,
       role: decoded.role // Now safely available for your role middleware downstream
