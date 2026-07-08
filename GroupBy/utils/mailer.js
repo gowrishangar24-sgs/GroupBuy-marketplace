@@ -2,10 +2,10 @@ const nodemailer = require("nodemailer");
 const dns = require("dns");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  // ❌ REMOVED service: "gmail" -> This was overriding our custom IPv4 rules!
   host: "smtp.gmail.com",
   port: 465,
-  secure: true, 
+  secure: true, // true for port 465
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
@@ -13,11 +13,15 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false 
   },
-  // Forces Nodemailer to resolve only IPv4 endpoints to bypass Render's ENETUNREACH block
+  // 🔥 Strict IPv4 Enforcement: Explicitly forces Nodemailer to ignore Render's blocked IPv6 setup
   lookup: (hostname, options, callback) => {
-    return dns.lookup(hostname, { family: 4 }, callback);
+    if (typeof options === "function") {
+      callback = options;
+      options = {};
+    }
+    return dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
   },
-  // 🔧 TIMEOUT PROTECTION: Prevents the server from hanging indefinitely on network bottlenecks
+  // 🔧 TIMEOUT PROTECTION: Prevents requests from hanging indefinitely on network bottlenecks
   connectionTimeout: 8000, // Time limit to establish a TCP handshake (8 seconds)
   greetingTimeout: 8000,   // Time limit to receive the SMTP greetings reply
   socketTimeout: 8000,     // Time limit to kill an idle connection socket
