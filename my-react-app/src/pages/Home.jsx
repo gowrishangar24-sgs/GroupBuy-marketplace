@@ -143,22 +143,6 @@ function Home() {
             <div className="container">
               <div className="row g-3">
                 <div className="col-6">
-                  <Link to="/offers/KitchenOffer">
-                    <img src="/c5.png" className="w-100 rounded shadow-sm" alt="Kitchen Offer" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-                <div className="col-6">
-                  <Link to="/offers/FashionOffer">
-                    <img src="/c3.png" className="w-100 rounded shadow-sm" alt="Fashion Offer" style={{ height: "280px", objectFit: "cover" }} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="carousel-item">
-            <div className="container">
-              <div className="row g-3">
-                <div className="col-6">
                   <Link to="/offers/SportsOffer">
                     <img src="/c4.png" className="w-100 rounded shadow-sm" alt="Sports Offer" style={{ height: "280px", objectFit: "cover" }} />
                   </Link>
@@ -199,20 +183,6 @@ function Home() {
             <div className="container">
               <Link to="/offers/BeautyOffer">
                 <img src="/c2.png" className="w-100 rounded shadow-sm" alt="Beauty Offer" style={{ height: "200px", objectFit: "cover" }} />
-              </Link>
-            </div>
-          </div>
-          <div className="carousel-item">
-            <div className="container">
-              <Link to="/offers/KitchenOffer">
-                <img src="/c5.png" className="w-100 rounded shadow-sm" alt="Kitchen Offer" style={{ height: "200px", objectFit: "cover" }} />
-              </Link>
-            </div>
-          </div>
-          <div className="carousel-item">
-            <div className="container">
-              <Link to="/offers/FashionOffer">
-                <img src="/c3.png" className="w-100 rounded shadow-sm" alt="Fashion Offer" style={{ height: "200px", objectFit: "cover" }} />
               </Link>
             </div>
           </div>
