@@ -126,14 +126,14 @@ function Home() {
           <div className="carousel-item active">
             <div className="container">
               <div className="row g-3">
-                <div className="col-6">
+                <div className="col-12 col-md-6">
                   <Link to="/offers/ElectronicsOffer">
-                    <img src="/C1.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                    <img src="/C1.png" className="w-100 rounded shadow-sm" alt="Electronics Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
                   </Link>
                 </div>
-                <div className="col-6">
+                <div className="col-12 col-md-6">
                   <Link to="/offers/BeautyOffer">
-                    <img src="/c2.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                    <img src="/c2.png" className="w-100 rounded shadow-sm" alt="Beauty Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
                   </Link>
                 </div>
               </div>
@@ -142,14 +142,14 @@ function Home() {
           <div className="carousel-item">
             <div className="container">
               <div className="row g-3">
-                <div className="col-6">
+                <div className="col-12 col-md-6">
                   <Link to="/offers/KitchenOffer">
-                    <img src="/c5.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                    <img src="/c5.png" className="w-100 rounded shadow-sm" alt="Kitchen Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
                   </Link>
                 </div>
-                <div className="col-6">
+                <div className="col-12 col-md-6">
                   <Link to="/offers/FashionOffer">
-                    <img src="/c3.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                    <img src="/c3.png" className="w-100 rounded shadow-sm" alt="Fashion Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
                   </Link>
                 </div>
               </div>
@@ -158,14 +158,14 @@ function Home() {
           <div className="carousel-item">
             <div className="container">
               <div className="row g-3">
-                <div className="col-6">
+                <div className="col-12 col-md-6">
                   <Link to="/offers/SportsOffer">
-                    <img src="/c4.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                    <img src="/c4.png" className="w-100 rounded shadow-sm" alt="Sports Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
                   </Link>
                 </div>
-                <div className="col-6">
+                <div className="col-12 col-md-6">
                   <Link to="/offers/BoatOffer">
-                    <img src="/boat.png" className="w-100 rounded shadow-sm" alt="" style={{ height: "280px", objectFit: "cover" }} />
+                    <img src="/boat.png" className="w-100 rounded shadow-sm" alt="Boat Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
                   </Link>
                 </div>
               </div>

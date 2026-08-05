@@ -50,42 +50,19 @@ function Navbar({ searchTerm, setSearchTerm }) {
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-sm">
-        <div className="container-fluid px-3 flex-nowrap justify-content-between align-items-center">
+      <nav className="navbar navbar-dark bg-black sticky-top shadow-sm">
+        <div className="container-fluid px-3 d-flex align-items-center justify-content-between">
           
-          {/* Left: Menu Side Trigger Button */}
-          <button
-            className="btn btn-outline-light me-1 border-0 px-2"
-            style={{ fontSize: "20px" }}
-            onClick={() => setIsOpen(true)}
-            type="button"
-          >
-            ☰
-          </button>
-
-          {/* Center-Left: Brand Logo */}
-          <Link className="navbar-brand fw-bold me-auto ms-1" to="/">
+          {/* Left: Brand Logo */}
+          <Link className="navbar-brand fw-bold me-auto me-md-3" to="/">
             <img src="/title.png" alt="GroupBuy" style={{ height: "clamp(30px, 4.5vw, 42px)", objectFit: "contain" }} />
           </Link>
 
-          {/* Right: Mobile Collapse Toggle Button */}
-          <button
-            className="navbar-toggler border-0 px-2 ms-2"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarMain"
-            aria-controls="navbarMain"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon" />
-          </button>
-
-          {/* Collapsible content (Search + Actions) */}
-          <div className="collapse navbar-collapse" id="navbarMain">
+          {/* Center/Right Desktop Top Bar Content (Hidden on Mobile < 768px) */}
+          <div className="d-none d-md-flex align-items-center flex-grow-1 justify-content-between gap-3">
             {/* Search Bar */}
             <form
-              className="d-flex mx-auto my-2 my-lg-0"
+              className="d-flex mx-auto"
               style={{ width: "min(520px, 100%)" }}
               onSubmit={(e) => {
                 e.preventDefault();
@@ -117,7 +94,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
             </form>
 
             {/* Right Side Navigation Actions */}
-            <ul className="navbar-nav ms-auto align-items-center gap-1 w-100 justify-content-end flex-row flex-wrap mt-2 mt-lg-0">
+            <ul className="navbar-nav ms-auto align-items-center gap-1 flex-row">
               {user ? (
                 <>
                   {/* Cart Icon */}
@@ -168,7 +145,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
                   {user.role === "seller" && (
                     <li className="nav-item">
                       <Link
-                        className="btn btn-outline-warning btn-sm ms-1 my-1"
+                        className="btn btn-outline-warning btn-sm ms-1"
                         to="/SellerDashboard"
                         style={{ borderRadius: "8px" }}
                       >
@@ -179,7 +156,7 @@ function Navbar({ searchTerm, setSearchTerm }) {
 
                   <li className="nav-item">
                     <button
-                      className="btn btn-danger btn-sm ms-1 my-1"
+                      className="btn btn-danger btn-sm ms-1"
                       onClick={handleLogout}
                       style={{ borderRadius: "8px" }}
                     >
@@ -190,12 +167,12 @@ function Navbar({ searchTerm, setSearchTerm }) {
               ) : (
                 <>
                   <li className="nav-item">
-                    <Link className="btn btn-outline-light btn-sm me-1 my-1" to="/login" style={{ borderRadius: "8px" }}>
+                    <Link className="btn btn-outline-light btn-sm me-1" to="/login" style={{ borderRadius: "8px" }}>
                       Login
                     </Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="btn btn-success btn-sm my-1" to="/signup" style={{ borderRadius: "8px" }}>
+                    <Link className="btn btn-success btn-sm" to="/signup" style={{ borderRadius: "8px" }}>
                       Sign Up
                     </Link>
                   </li>
@@ -203,12 +180,29 @@ function Navbar({ searchTerm, setSearchTerm }) {
               )}
             </ul>
           </div>
+
+          {/* Right: Single Hamburger Menu Toggle Button */}
+          <button
+            className="btn btn-outline-light border-0 px-2 ms-2"
+            style={{ fontSize: "22px" }}
+            onClick={() => setIsOpen(true)}
+            type="button"
+            aria-label="Open Navigation Drawer"
+          >
+            ☰
+          </button>
         </div>
       </nav>
 
-      <GroupBuyOffcanvas isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <GroupBuyOffcanvas 
+        isOpen={isOpen} 
+        onClose={() => setIsOpen(false)} 
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
     </>
   );
+
 }
 
 export default Navbar;

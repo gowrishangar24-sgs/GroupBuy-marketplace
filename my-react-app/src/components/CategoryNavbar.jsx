@@ -55,19 +55,13 @@ function CategoryNavbar() {
       }}
     >
       <div
-        className="container-fluid justify-content-start justify-content-md-center d-flex align-items-center flex-nowrap gap-1 overflow-x-auto px-2"
+        className="container-fluid justify-content-start justify-content-md-center d-flex flex-nowrap align-items-center gap-1 overflow-x-auto no-scrollbar px-2 py-1"
         style={{ 
           whiteSpace: "nowrap",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch"
         }}
       >
-        <style>{`
-          .container-fluid::-webkit-scrollbar {
-            display: none !important;
-          }
-        `}</style>
+
 
         {categories.map(({ key, count }) => {
           const meta = CATEGORY_META[key];
