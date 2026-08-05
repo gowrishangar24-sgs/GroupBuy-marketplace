@@ -50,53 +50,20 @@ function Navbar({ searchTerm, setSearchTerm }) {
 
   return (
     <>
-      <nav className="navbar navbar-dark bg-black sticky-top shadow-sm">
-        <div className="container-fluid px-3 d-flex align-items-center justify-content-between">
-          
-          {/* Left: Brand Logo */}
-          <Link className="navbar-brand fw-bold me-auto me-md-3" to="/">
-            <img src="/title.png" alt="GroupBuy" style={{ height: "clamp(30px, 4.5vw, 42px)", objectFit: "contain" }} />
-          </Link>
+      <nav className="navbar navbar-dark bg-black sticky-top shadow-sm p-0">
+        <div className="w-100">
+          {/* Main Top Navbar Row */}
+          <div className="container-fluid px-3 py-2 d-flex align-items-center justify-content-between">
+            
+            {/* Left: Brand Logo */}
+            <Link className="navbar-brand fw-bold me-auto me-md-3" to="/">
+              <img src="/title.png" alt="GroupBuy" style={{ height: "clamp(30px, 4.5vw, 42px)", objectFit: "contain" }} />
+            </Link>
 
-          {/* Center/Right Desktop Top Bar Content (Hidden on Mobile < 768px) */}
-          <div className="d-none d-md-flex align-items-center flex-grow-1 justify-content-between gap-3">
-            {/* Search Bar */}
-            <form
-              className="d-flex mx-auto"
-              style={{ width: "min(520px, 100%)" }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = searchTerm?.trim();
-                if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
-              }}
-            >
-              <div className="input-group">
-                <input
-                  className="form-control border-0 bg-white"
-                  type="text"
-                  placeholder="Search products, deals, categories..."
-                  value={setSearchTerm ? (searchTerm || "") : ""} 
-                  onChange={(e) => {
-                    if (setSearchTerm) {
-                      setSearchTerm(e.target.value);
-                    }
-                  }}
-                  style={{ borderRadius: "8px 0 0 8px" }}
-                />
-                <button
-                  className="btn btn-success px-3"
-                  type="submit"
-                  style={{ borderRadius: "0 8px 8px 0" }}
-                >
-                  🔍
-                </button>
-              </div>
-            </form>
-
-            {/* Right Side Navigation Actions */}
-            <ul className="navbar-nav ms-auto align-items-center gap-1 flex-row">
+            {/* Desktop Right Side Navigation Actions */}
+            <div className="d-none d-md-flex align-items-center gap-2">
               {user ? (
-                <>
+                <ul className="navbar-nav align-items-center gap-1 flex-row">
                   {/* Cart Icon */}
                   <li className="nav-item">
                     <Link
@@ -163,34 +130,65 @@ function Navbar({ searchTerm, setSearchTerm }) {
                       Logout
                     </button>
                   </li>
-                </>
+                </ul>
               ) : (
-                <>
-                  <li className="nav-item">
-                    <Link className="btn btn-outline-light btn-sm me-1" to="/login" style={{ borderRadius: "8px" }}>
-                      Login
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="btn btn-success btn-sm" to="/signup" style={{ borderRadius: "8px" }}>
-                      Sign Up
-                    </Link>
-                  </li>
-                </>
+                <div className="d-flex align-items-center gap-2">
+                  <Link className="btn btn-outline-light btn-sm" to="/login" style={{ borderRadius: "8px" }}>
+                    Login
+                  </Link>
+                  <Link className="btn btn-success btn-sm" to="/signup" style={{ borderRadius: "8px" }}>
+                    Sign Up
+                  </Link>
+                </div>
               )}
-            </ul>
+            </div>
+
+            {/* Right: Hamburger Menu Toggle Button */}
+            <button
+              className="btn btn-outline-light border-0 px-2 ms-2"
+              style={{ fontSize: "22px" }}
+              onClick={() => setIsOpen(true)}
+              type="button"
+              aria-label="Open Navigation Drawer"
+            >
+              ☰
+            </button>
           </div>
 
-          {/* Right: Single Hamburger Menu Toggle Button */}
-          <button
-            className="btn btn-outline-light border-0 px-2 ms-2"
-            style={{ fontSize: "22px" }}
-            onClick={() => setIsOpen(true)}
-            type="button"
-            aria-label="Open Navigation Drawer"
-          >
-            ☰
-          </button>
+          {/* Search Bar Row (Below main top navbar header) */}
+          <div className="px-3 pb-2 pt-1 bg-black border-top border-secondary border-opacity-25">
+            <form
+              className="d-flex mx-auto"
+              style={{ maxWidth: "600px" }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = searchTerm?.trim();
+                if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+              }}
+            >
+              <div className="input-group">
+                <input
+                  className="form-control border-0 bg-white"
+                  type="text"
+                  placeholder="Search products, deals, categories..."
+                  value={setSearchTerm ? (searchTerm || "") : ""} 
+                  onChange={(e) => {
+                    if (setSearchTerm) {
+                      setSearchTerm(e.target.value);
+                    }
+                  }}
+                  style={{ borderRadius: "8px 0 0 8px" }}
+                />
+                <button
+                  className="btn btn-success px-3"
+                  type="submit"
+                  style={{ borderRadius: "0 8px 8px 0" }}
+                >
+                  🔍
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </nav>
 

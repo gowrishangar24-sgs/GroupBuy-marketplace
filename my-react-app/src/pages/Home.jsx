@@ -115,10 +115,10 @@ function Home() {
       <Navbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       <CategoryNavbar />
 
-      {/* OFFER CAROUSEL */}
+      {/* OFFER CAROUSEL - DESKTOP VIEW (2 images per slide, >= 768px) */}
       <div
-        id="offerCarousel"
-        className="carousel slide mb-4"
+        id="offerCarouselDesktop"
+        className="carousel slide mb-4 d-none d-md-block"
         data-bs-ride="carousel"
         data-bs-interval="3000"
       >
@@ -126,14 +126,14 @@ function Home() {
           <div className="carousel-item active">
             <div className="container">
               <div className="row g-3">
-                <div className="col-12 col-md-6">
+                <div className="col-6">
                   <Link to="/offers/ElectronicsOffer">
-                    <img src="/C1.png" className="w-100 rounded shadow-sm" alt="Electronics Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
+                    <img src="/C1.png" className="w-100 rounded shadow-sm" alt="Electronics Offer" style={{ height: "280px", objectFit: "cover" }} />
                   </Link>
                 </div>
-                <div className="col-12 col-md-6">
+                <div className="col-6">
                   <Link to="/offers/BeautyOffer">
-                    <img src="/c2.png" className="w-100 rounded shadow-sm" alt="Beauty Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
+                    <img src="/c2.png" className="w-100 rounded shadow-sm" alt="Beauty Offer" style={{ height: "280px", objectFit: "cover" }} />
                   </Link>
                 </div>
               </div>
@@ -142,14 +142,14 @@ function Home() {
           <div className="carousel-item">
             <div className="container">
               <div className="row g-3">
-                <div className="col-12 col-md-6">
+                <div className="col-6">
                   <Link to="/offers/KitchenOffer">
-                    <img src="/c5.png" className="w-100 rounded shadow-sm" alt="Kitchen Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
+                    <img src="/c5.png" className="w-100 rounded shadow-sm" alt="Kitchen Offer" style={{ height: "280px", objectFit: "cover" }} />
                   </Link>
                 </div>
-                <div className="col-12 col-md-6">
+                <div className="col-6">
                   <Link to="/offers/FashionOffer">
-                    <img src="/c3.png" className="w-100 rounded shadow-sm" alt="Fashion Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
+                    <img src="/c3.png" className="w-100 rounded shadow-sm" alt="Fashion Offer" style={{ height: "280px", objectFit: "cover" }} />
                   </Link>
                 </div>
               </div>
@@ -158,24 +158,83 @@ function Home() {
           <div className="carousel-item">
             <div className="container">
               <div className="row g-3">
-                <div className="col-12 col-md-6">
+                <div className="col-6">
                   <Link to="/offers/SportsOffer">
-                    <img src="/c4.png" className="w-100 rounded shadow-sm" alt="Sports Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
+                    <img src="/c4.png" className="w-100 rounded shadow-sm" alt="Sports Offer" style={{ height: "280px", objectFit: "cover" }} />
                   </Link>
                 </div>
-                <div className="col-12 col-md-6">
+                <div className="col-6">
                   <Link to="/offers/BoatOffer">
-                    <img src="/boat.png" className="w-100 rounded shadow-sm" alt="Boat Offer" style={{ height: "clamp(180px, 32vw, 280px)", objectFit: "cover" }} />
+                    <img src="/boat.png" className="w-100 rounded shadow-sm" alt="Boat Offer" style={{ height: "280px", objectFit: "cover" }} />
                   </Link>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <button className="carousel-control-prev" type="button" data-bs-target="#offerCarousel" data-bs-slide="prev">
+        <button className="carousel-control-prev" type="button" data-bs-target="#offerCarouselDesktop" data-bs-slide="prev">
           <span className="carousel-control-prev-icon" />
         </button>
-        <button className="carousel-control-next" type="button" data-bs-target="#offerCarousel" data-bs-slide="next">
+        <button className="carousel-control-next" type="button" data-bs-target="#offerCarouselDesktop" data-bs-slide="next">
+          <span className="carousel-control-next-icon" />
+        </button>
+      </div>
+
+      {/* OFFER CAROUSEL - MOBILE VIEW (Only 1 image per slide, < 768px) */}
+      <div
+        id="offerCarouselMobile"
+        className="carousel slide mb-4 d-block d-md-none"
+        data-bs-ride="carousel"
+        data-bs-interval="3000"
+      >
+        <div className="carousel-inner">
+          <div className="carousel-item active">
+            <div className="container">
+              <Link to="/offers/ElectronicsOffer">
+                <img src="/C1.png" className="w-100 rounded shadow-sm" alt="Electronics Offer" style={{ height: "200px", objectFit: "cover" }} />
+              </Link>
+            </div>
+          </div>
+          <div className="carousel-item">
+            <div className="container">
+              <Link to="/offers/BeautyOffer">
+                <img src="/c2.png" className="w-100 rounded shadow-sm" alt="Beauty Offer" style={{ height: "200px", objectFit: "cover" }} />
+              </Link>
+            </div>
+          </div>
+          <div className="carousel-item">
+            <div className="container">
+              <Link to="/offers/KitchenOffer">
+                <img src="/c5.png" className="w-100 rounded shadow-sm" alt="Kitchen Offer" style={{ height: "200px", objectFit: "cover" }} />
+              </Link>
+            </div>
+          </div>
+          <div className="carousel-item">
+            <div className="container">
+              <Link to="/offers/FashionOffer">
+                <img src="/c3.png" className="w-100 rounded shadow-sm" alt="Fashion Offer" style={{ height: "200px", objectFit: "cover" }} />
+              </Link>
+            </div>
+          </div>
+          <div className="carousel-item">
+            <div className="container">
+              <Link to="/offers/SportsOffer">
+                <img src="/c4.png" className="w-100 rounded shadow-sm" alt="Sports Offer" style={{ height: "200px", objectFit: "cover" }} />
+              </Link>
+            </div>
+          </div>
+          <div className="carousel-item">
+            <div className="container">
+              <Link to="/offers/BoatOffer">
+                <img src="/boat.png" className="w-100 rounded shadow-sm" alt="Boat Offer" style={{ height: "200px", objectFit: "cover" }} />
+              </Link>
+            </div>
+          </div>
+        </div>
+        <button className="carousel-control-prev" type="button" data-bs-target="#offerCarouselMobile" data-bs-slide="prev">
+          <span className="carousel-control-prev-icon" />
+        </button>
+        <button className="carousel-control-next" type="button" data-bs-target="#offerCarouselMobile" data-bs-slide="next">
           <span className="carousel-control-next-icon" />
         </button>
       </div>
