@@ -174,13 +174,12 @@ exports.joinDeal = async (req, res, next) => {
       message += " 🎉 Milestone reached! Order is ready to confirm.";
     }
 
-    res.status(200).json({ success: true, message, deal: obj, order: refreshedOrder });
+    return res.status(200).json({ success: true, message, deal: obj, order: refreshedOrder });
   } catch (error) {
     if (typeof next === "function") {
-      next(error);
-    } else {
-      res.status(500).json({ success: false, message: error.message || "Failed to join deal" });
+      return next(error);
     }
+    return res.status(500).json({ success: false, message: error.message || "Failed to join deal" });
   }
 };
 
