@@ -16,11 +16,34 @@ const emptyForm = {
 
 function AddProduct() {
   const [formData, setFormData] = useState(emptyForm);
+  const [imagePreview, setImagePreview] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size exceeds 5MB limit. Please choose a smaller image.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+      setFormData((prev) => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImagePreview("");
+    setFormData((prev) => ({ ...prev, image: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -38,6 +61,7 @@ function AddProduct() {
 
       alert("Product Added Successfully!");
       setFormData(emptyForm);
+      setImagePreview("");
       navigate("/SellerDashboard");
 
     } catch (error) {
@@ -73,26 +97,113 @@ function AddProduct() {
               />
             </div>
 
-            {/* Image URL */}
+            {/* Product Image */}
             <div className="mb-3">
-              <label className="form-label fw-semibold text-secondary">Image URL</label>
+              <label className="form-label fw-semibold text-secondary">Product Image</label>
+
+              {/* Hidden file input */}
               <input
-                type="text"
-                name="image"
-                className="form-control custom-add-input"
-                placeholder="https://..."
-                value={formData.image}
-                onChange={handleChange}
-                autoComplete="off"
-                spellCheck="false"
+                type="file"
+                id="product-image-upload"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleImageUpload}
               />
-              {formData.image && (
-                <img
-                  src={formData.image}
-                  alt="preview"
-                  className="mt-2 rounded border"
-                  style={{ height: "100px", width: "100px", objectFit: "cover" }}
-                />
+
+              {!imagePreview ? (
+                /* Clickable Upload Card */
+                <label
+                  htmlFor="product-image-upload"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "124px",
+                    height: "124px",
+                    border: "1.8px solid #6366f1",
+                    borderRadius: "14px",
+                    backgroundColor: "#fcfdff",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f0f3ff")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#fcfdff")
+                  }
+                >
+                  {/* Document + Plus SVG Icon */}
+                  <svg
+                    width="38"
+                    height="38"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#6366f1"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="11" x2="12" y2="17" />
+                    <line x1="9" y1="14" x2="15" y2="14" />
+                  </svg>
+
+                  <span
+                    style={{
+                      marginTop: "7px",
+                      fontSize: "13px",
+                      fontWeight: "500",
+                      color: "#475569",
+                    }}
+                  >
+                    Upload file
+                  </span>
+                </label>
+              ) : (
+                /* Uploaded Image Preview */
+                <div
+                  style={{
+                    position: "relative",
+                    width: "124px",
+                    height: "124px",
+                  }}
+                >
+                  <img
+                    src={imagePreview}
+                    alt="Uploaded Product"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "14px",
+                      border: "1.8px solid #6366f1",
+                    }}
+                  />
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="btn btn-sm btn-danger position-absolute"
+                    style={{
+                      top: "-8px",
+                      right: "-8px",
+                      borderRadius: "50%",
+                      width: "24px",
+                      height: "24px",
+                      padding: "0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "12px",
+                    }}
+                    title="Remove image"
+                  >
+                    ✕
+                  </button>
+                </div>
               )}
             </div>
 
