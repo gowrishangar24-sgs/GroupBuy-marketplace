@@ -12,11 +12,9 @@ function Navbar({ searchTerm, setSearchTerm }) {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
-  // Fetch cart + wishlist counts on mount (if logged in)
   useEffect(() => {
     if (!user || !token) return;
 
-    // ✅ Clean & Relative: axios automatically prepends the baseURL from App.jsx
     axios
       .get("/cart", {
         headers: { Authorization: `Bearer ${token}` },
@@ -50,20 +48,57 @@ function Navbar({ searchTerm, setSearchTerm }) {
 
   return (
     <>
-      <nav className="navbar navbar-dark bg-black sticky-top shadow-sm p-0">
-        <div className="w-100">
-          {/* Main Top Navbar Row */}
-          <div className="container-fluid px-3 py-2 d-flex align-items-center justify-content-between">
-            
-            {/* Left: Brand Logo */}
-            <Link className="navbar-brand fw-bold me-auto me-md-3" to="/">
-              <img src="/title.png" alt="GroupBuy" style={{ height: "clamp(30px, 4.5vw, 42px)", objectFit: "contain" }} />
-            </Link>
+      <nav className="navbar navbar-dark bg-black sticky-top shadow-sm py-2 px-3">
+        <div className="container-fluid px-0 d-flex align-items-center justify-content-between flex-nowrap gap-3">
+          
+          {/* 1. Left: Brand Logo */}
+          <Link className="navbar-brand fw-bold flex-shrink-0 m-0" to="/">
+            <img
+              src="/title.png"
+              alt="GroupBuy"
+              style={{ height: "clamp(28px, 4vw, 40px)", objectFit: "contain" }}
+            />
+          </Link>
 
-            {/* Desktop Right Side Navigation Actions */}
+          {/* 2. Center: Search Bar (Aligned in the same row) */}
+          <form
+            className="d-flex flex-grow-1 mx-2"
+            style={{ maxWidth: "520px" }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const q = searchTerm?.trim();
+              if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+            }}
+          >
+            <div className="input-group">
+              <input
+                className="form-control border-0 bg-white"
+                type="text"
+                placeholder="Search products, deals, categories..."
+                value={setSearchTerm ? (searchTerm || "") : ""}
+                onChange={(e) => {
+                  if (setSearchTerm) {
+                    setSearchTerm(e.target.value);
+                  }
+                }}
+                style={{ borderRadius: "8px 0 0 8px", fontSize: "14px" }}
+              />
+              <button
+                className="btn btn-success px-3"
+                type="submit"
+                style={{ borderRadius: "0 8px 8px 0" }}
+              >
+                🔍
+              </button>
+            </div>
+          </form>
+
+          {/* 3. Right: Desktop Actions & Mobile Menu Toggle */}
+          <div className="d-flex align-items-center gap-2 flex-shrink-0">
+            {/* Desktop Navigation */}
             <div className="d-none d-md-flex align-items-center gap-2">
               {user ? (
-                <ul className="navbar-nav align-items-center gap-1 flex-row">
+                <ul className="navbar-nav align-items-center gap-1 flex-row mb-0">
                   {/* Cart Icon */}
                   <li className="nav-item">
                     <Link
@@ -109,10 +144,11 @@ function Navbar({ searchTerm, setSearchTerm }) {
                     </Link>
                   </li>
 
+                  {/* Seller Dashboard */}
                   {user.role === "seller" && (
                     <li className="nav-item">
                       <Link
-                        className="btn btn-outline-warning btn-sm ms-1"
+                        className="btn btn-outline-warning btn-sm ms-1 text-nowrap"
                         to="/SellerDashboard"
                         style={{ borderRadius: "8px" }}
                       >
@@ -121,9 +157,10 @@ function Navbar({ searchTerm, setSearchTerm }) {
                     </li>
                   )}
 
+                  {/* Logout Button */}
                   <li className="nav-item">
                     <button
-                      className="btn btn-danger btn-sm ms-1"
+                      className="btn btn-danger btn-sm ms-1 text-nowrap"
                       onClick={handleLogout}
                       style={{ borderRadius: "8px" }}
                     >
@@ -143,9 +180,9 @@ function Navbar({ searchTerm, setSearchTerm }) {
               )}
             </div>
 
-            {/* Right: Hamburger Menu Toggle Button */}
+            {/* Hamburger Menu Toggle Button */}
             <button
-              className="btn btn-outline-light border-0 px-2 ms-2"
+              className="btn btn-outline-light border-0 px-2 ms-1"
               style={{ fontSize: "22px" }}
               onClick={() => setIsOpen(true)}
               type="button"
@@ -155,40 +192,6 @@ function Navbar({ searchTerm, setSearchTerm }) {
             </button>
           </div>
 
-          {/* Search Bar Row (Below main top navbar header) */}
-          <div className="px-3 pb-2 pt-1 bg-black border-top border-secondary border-opacity-25">
-            <form
-              className="d-flex mx-auto"
-              style={{ maxWidth: "600px" }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = searchTerm?.trim();
-                if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
-              }}
-            >
-              <div className="input-group">
-                <input
-                  className="form-control border-0 bg-white"
-                  type="text"
-                  placeholder="Search products, deals, categories..."
-                  value={setSearchTerm ? (searchTerm || "") : ""} 
-                  onChange={(e) => {
-                    if (setSearchTerm) {
-                      setSearchTerm(e.target.value);
-                    }
-                  }}
-                  style={{ borderRadius: "8px 0 0 8px" }}
-                />
-                <button
-                  className="btn btn-success px-3"
-                  type="submit"
-                  style={{ borderRadius: "0 8px 8px 0" }}
-                >
-                  🔍
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       </nav>
 
@@ -200,7 +203,6 @@ function Navbar({ searchTerm, setSearchTerm }) {
       />
     </>
   );
-
 }
 
 export default Navbar;
