@@ -83,7 +83,7 @@ orderSchema.pre("save", function (next) {
   } else if (this.isModified("orderStatus") && !this.isModified("status")) {
     this.status = this.orderStatus;
   }
-  next();
+  
 });
 
-module.exports = mongoose.model("Order", orderSchema);
+module.exports = mongoose.model("Order", orderSchema);
