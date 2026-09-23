@@ -19,6 +19,7 @@ import ProductDetails from "./pages/ProductDetails";
 import SearchResults from "./pages/SearchResults";
 import CreateDeal from "./pages/CreateDeal";
 import MyDeals from "./pages/MyDeals";
+import MyOrders from "./pages/MyOrders";
 import Account from "./pages/Account";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/WishList";
@@ -137,6 +138,8 @@ function App() {
           <Route path="/AddProduct" element={<AddProduct />} />
           <Route path="/CreateDeal" element={<CreateDeal />} />
           <Route path="/MyDeals" element={<MyDeals />} />
+          <Route path="/my-orders" element={<MyOrders />} />
+          <Route path="/MyOrders" element={<MyOrders />} />
 
           {/* Product / Deal Detail */}
           <Route path="/product/:id" element={<ProductDetails />} />
