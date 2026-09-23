@@ -176,7 +176,11 @@ exports.joinDeal = async (req, res, next) => {
 
     res.status(200).json({ success: true, message, deal: obj, order: refreshedOrder });
   } catch (error) {
-    next(error);
+    if (typeof next === "function") {
+      next(error);
+    } else {
+      res.status(500).json({ success: false, message: error.message || "Failed to join deal" });
+    }
   }
 };
 

@@ -507,15 +507,36 @@ function ProductDetails() {
                 </div>
               </div>
 
-              <div className="mb-4">
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="fw-bold text-secondary">👥 Current Progress: <strong className="text-dark">{joinedUsers} / {targetMembers} buyers joined</strong></span>
-                  <span className="text-muted">{Math.round(progress)}%</span>
-                </div>
-                <div className="progress mb-2" style={{ height: "16px", borderRadius: "20px" }}>
-                  <div className={`progress-bar progress-bar-striped progress-bar-animated ${isFull ? "bg-success" : "bg-primary bg-gradient"}`} style={{ width: `${progress}%` }} />
-                </div>
-              </div>
+              {(() => {
+                const currentTarget = selectedTier 
+                  ? (selectedTier.minUsers || selectedTier.targetMinBuyers || item?.targetMembers || 1) 
+                  : (item?.targetMembers || 1);
+
+                const progressPercentage = Math.min(
+                  100, 
+                  Math.round(((item?.joinedUsers || 0) / currentTarget) * 100)
+                );
+                const isTargetReached = (item?.joinedUsers || 0) >= currentTarget;
+
+                return (
+                  <div className="mb-4">
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="fw-bold text-secondary">
+                        👥 Current Progress: <strong className="text-dark">{joinedUsers} / {currentTarget} buyers joined</strong>
+                      </span>
+                      <span className="text-muted">{progressPercentage}%</span>
+                    </div>
+                    <div className="progress mb-2" style={{ height: "16px", borderRadius: "20px" }}>
+                      <div
+                        className={`progress-bar progress-bar-striped progress-bar-animated ${
+                          isTargetReached ? "bg-success" : "bg-primary bg-gradient"
+                        }`}
+                        style={{ width: `${progressPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
 
               <button
                 className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${
