@@ -14,14 +14,13 @@ const emptyForm = {
   originalPrice: "",
   targetMembers: "",
   seller: "",
-  // deadline replaces the old daysLeft number field
   deadline: "",
 };
 
 function CreateDeal() {
   const [formData, setFormData] = useState(emptyForm);
-  // Start with one empty tier so the form doesn't look blank
   const [tiers, setTiers] = useState([emptyTier()]);
+  const [imagePreview, setImagePreview] = useState("");
   const navigate = useNavigate();
 
   // ── Minimum deadline date: tomorrow ──────────────────────────
@@ -31,6 +30,30 @@ function CreateDeal() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // ── Image Upload & Preview Handler ───────────────────────────
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Optional: Max 5MB check
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size exceeds 5MB limit. Please choose a smaller image.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+      setFormData((prev) => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImagePreview("");
+    setFormData((prev) => ({ ...prev, image: "" }));
   };
 
   // ── Tier row handlers ─────────────────────────────────────────
@@ -104,6 +127,7 @@ function CreateDeal() {
       console.log(res.data);
       alert("Deal Created Successfully!");
       setFormData(emptyForm);
+      setImagePreview("");
       setTiers([emptyTier()]);
       navigate("/MyDeals");
     } catch (err) {
@@ -124,33 +148,131 @@ function CreateDeal() {
           <h2 className="mb-4 fw-bold">🚀 Create a New Deal</h2>
 
           <form onSubmit={handleSubmit}>
-
-            {/* 1. Basic Info */}
+            {/* 1. Deal Title */}
             <div className="mb-3">
-              <label className="form-label">Deal Title</label>
+              <label className="form-label fw-semibold">Deal Title</label>
               <input
                 type="text"
                 name="title"
                 className="form-control"
+                placeholder="e.g. Wireless Noise-Cancelling Headphones"
                 value={formData.title}
                 onChange={handleChange}
                 required
               />
             </div>
 
+            {/* 2. Upload Product Image Box */}
             <div className="mb-3">
-              <label className="form-label">Image URL</label>
+              <label className="form-label fw-semibold">Product Image</label>
+
+              {/* Hidden file input */}
               <input
-                type="text"
-                name="image"
-                className="form-control"
-                placeholder="https://..."
-                value={formData.image}
-                onChange={handleChange}
+                type="file"
+                id="deal-image-upload"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleImageUpload}
               />
+
+              {!imagePreview ? (
+                /* Clickable Upload Card */
+                <label
+                  htmlFor="deal-image-upload"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "124px",
+                    height: "124px",
+                    border: "1.8px solid #6366f1",
+                    borderRadius: "14px",
+                    backgroundColor: "#fcfdff",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f0f3ff")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#fcfdff")
+                  }
+                >
+                  {/* Document + Plus SVG Icon */}
+                  <svg
+                    width="38"
+                    height="38"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#6366f1"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="11" x2="12" y2="17" />
+                    <line x1="9" y1="14" x2="15" y2="14" />
+                  </svg>
+
+                  <span
+                    style={{
+                      marginTop: "7px",
+                      fontSize: "13px",
+                      fontWeight: "500",
+                      color: "#475569",
+                    }}
+                  >
+                    Upload file
+                  </span>
+                </label>
+              ) : (
+                /* Uploaded Image Preview */
+                <div
+                  style={{
+                    position: "relative",
+                    width: "124px",
+                    height: "124px",
+                  }}
+                >
+                  <img
+                    src={imagePreview}
+                    alt="Uploaded Product"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "14px",
+                      border: "1.8px solid #6366f1",
+                    }}
+                  />
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="btn btn-sm btn-danger position-absolute"
+                    style={{
+                      top: "-8px",
+                      right: "-8px",
+                      borderRadius: "50%",
+                      width: "24px",
+                      height: "24px",
+                      padding: "0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "12px",
+                    }}
+                    title="Remove image"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* 2. Category */}
+            {/* 3. Category */}
             <div className="mb-3">
               <label className="form-label fw-semibold">Category</label>
               <select
@@ -170,9 +292,11 @@ function CreateDeal() {
               </select>
             </div>
 
-            {/* 3. Original Price */}
+            {/* 4. Original Price */}
             <div className="mb-3">
-              <label className="form-label">Original / Retail Price (₹)</label>
+              <label className="form-label fw-semibold">
+                Original / Retail Price (₹)
+              </label>
               <input
                 type="number"
                 name="originalPrice"
@@ -185,7 +309,7 @@ function CreateDeal() {
               />
             </div>
 
-            {/* 4. Dynamic Pricing Tiers ─────────────────────────── */}
+            {/* 5. Dynamic Pricing Tiers */}
             <div className="mb-4">
               <label className="form-label fw-semibold">
                 🏷️ Group Pricing Tiers
@@ -195,7 +319,10 @@ function CreateDeal() {
               </label>
 
               {tiers.map((tier, index) => (
-                <div key={index} className="d-flex align-items-center gap-2 mb-2">
+                <div
+                  key={index}
+                  className="d-flex align-items-center gap-2 mb-2"
+                >
                   <div className="flex-fill">
                     <input
                       type="number"
@@ -249,10 +376,10 @@ function CreateDeal() {
               </div>
             </div>
 
-            {/* 5. Group Threshold & Deadline */}
+            {/* 6. Target Members & Deadline */}
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">Target Members</label>
+                <label className="form-label fw-semibold">Target Members</label>
                 <input
                   type="number"
                   name="targetMembers"
@@ -266,7 +393,7 @@ function CreateDeal() {
               </div>
 
               <div className="col-md-6 mb-3">
-                <label className="form-label">Deal Deadline</label>
+                <label className="form-label fw-semibold">Deal Deadline</label>
                 <input
                   type="datetime-local"
                   name="deadline"
@@ -282,21 +409,22 @@ function CreateDeal() {
               </div>
             </div>
 
-            {/* 6. Seller / Brand Name */}
+            {/* 7. Seller / Brand Name */}
             <div className="mb-3">
-              <label className="form-label">Seller / Brand Name</label>
+              <label className="form-label fw-semibold">Seller / Brand Name</label>
               <input
                 type="text"
                 name="seller"
                 className="form-control"
+                placeholder="e.g. Acme Retailers"
                 value={formData.seller}
                 onChange={handleChange}
               />
             </div>
 
-            {/* 7. Description */}
+            {/* 8. Deal Description */}
             <div className="mb-4">
-              <label className="form-label">Deal Description</label>
+              <label className="form-label fw-semibold">Deal Description</label>
               <textarea
                 name="description"
                 className="form-control"
@@ -307,8 +435,11 @@ function CreateDeal() {
               />
             </div>
 
-            {/* 8. Submit */}
-            <button type="submit" className="btn btn-success w-100 btn-lg shadow-sm">
+            {/* 9. Submit Button */}
+            <button
+              type="submit"
+              className="btn btn-success w-100 btn-lg shadow-sm"
+            >
               Launch Group Deal
             </button>
           </form>

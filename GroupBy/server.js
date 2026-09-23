@@ -58,8 +58,9 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// 5. PARSE REQUEST BODIES
-app.use(express.json());
+// 5. PARSE REQUEST BODIES (Configured for Base64 image payloads up to 10MB)
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // ── SURFACES CRASHES IN RENDER LOGS INSTEAD OF SILENT PROCESS DEATH ───────────
 process.on("unhandledRejection", (reason) => {

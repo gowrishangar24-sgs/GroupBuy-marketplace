@@ -42,7 +42,7 @@ exports.getAdminDashboard = async (req, res, next) => {
       .limit(5);
 
     const activeDeals = await Deal.countDocuments({
-      status: "active",
+      status: "active", 
     });
 
     res.status(200).json({
