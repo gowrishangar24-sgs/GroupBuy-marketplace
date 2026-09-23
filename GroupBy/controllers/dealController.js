@@ -107,33 +107,74 @@ exports.getMyDeals = async (req, res, next) => {
 
 exports.joinDeal = async (req, res, next) => {
   try {
+    const Order = require("../models/Order");
+
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ success: false, message: "Deal not found" });
     if (deal.status !== "active") return res.status(400).json({ success: false, message: "This deal is no longer active" });
     if (deal.joinedUsers >= deal.targetMembers) return res.status(400).json({ success: false, message: "Deal is already full" });
 
+    let { selectedTierPrice, targetMinBuyers, shippingAddress, quantity = 1 } = req.body;
+
+    // Fallback if client did not supply specific tier parameters
+    if (!selectedTierPrice || !targetMinBuyers) {
+      if (deal.tiers && deal.tiers.length > 0) {
+        const sorted = [...deal.tiers].sort((a, b) => a.minUsers - b.minUsers);
+        const active = sorted.find((t) => deal.joinedUsers >= t.minUsers) || sorted[0];
+        selectedTierPrice = selectedTierPrice || active.price;
+        targetMinBuyers = targetMinBuyers || active.minUsers;
+      } else {
+        selectedTierPrice = selectedTierPrice || deal.originalPrice;
+        targetMinBuyers = targetMinBuyers || 1;
+      }
+    }
+
     deal.joinedUsers += 1;
     if (deal.joinedUsers >= deal.targetMembers) deal.status = "completed";
     await deal.save();
+
+    // Create pledged Order
+    const newOrder = await Order.create({
+      buyer: req.user.id,
+      deal: deal._id,
+      product: deal.product || null,
+      selectedTierPrice: Number(selectedTierPrice),
+      targetMinBuyers: Number(targetMinBuyers),
+      quantity: Number(quantity),
+      totalPrice: Number(selectedTierPrice) * Number(quantity),
+      shippingAddress: shippingAddress || "",
+      status: "pledged",
+      orderStatus: "pledged",
+    });
+
+    // Milestone Evaluation:
+    // Update all pledged orders associated with this deal whose targetMinBuyers <= deal.joinedUsers
+    const pledgedOrders = await Order.find({
+      deal: deal._id,
+      status: "pledged",
+      targetMinBuyers: { $lte: deal.joinedUsers },
+    });
+
+    for (const ord of pledgedOrders) {
+      ord.status = "ready_to_confirm";
+      ord.orderStatus = "ready_to_confirm";
+      await ord.save();
+    }
+
+    const refreshedOrder = await Order.findById(newOrder._id)
+      .populate("deal", "title image originalPrice seller tiers")
+      .populate("product", "title image price seller");
 
     const obj = deal.toJSON();
     obj.daysLeft = computeDaysLeft(deal.deadline);
     obj.activeTierPrice = getActiveTierPrice(deal);
 
-    let message;
-    if (deal.status === "completed") {
-      message = `Joined! Deal is now complete. Final group price: ₹${obj.activeTierPrice}`;
-    } else {
-      const nextTier = [...deal.tiers].sort((a, b) => a.minUsers - b.minUsers).find((t) => t.minUsers > deal.joinedUsers);
-      if (nextTier) {
-        const needed = nextTier.minUsers - deal.joinedUsers;
-        message = `Joined! Current price: ₹${obj.activeTierPrice}. ${needed} more member(s) unlock ₹${nextTier.price}.`;
-      } else {
-        message = `Joined deal successfully. Current group price: ₹${obj.activeTierPrice}`;
-      }
+    let message = `Pledged deal successfully at ₹${selectedTierPrice}!`;
+    if (refreshedOrder && refreshedOrder.status === "ready_to_confirm") {
+      message += " 🎉 Milestone reached! Order is ready to confirm.";
     }
 
-    res.status(200).json({ success: true, message, deal: obj });
+    res.status(200).json({ success: true, message, deal: obj, order: refreshedOrder });
   } catch (error) {
     next(error);
   }

@@ -14,6 +14,7 @@ function ProductDetails() {
   // ── 1. ALL REACT HOOKS DECLARED AT THE VERY TOP ──
   const [item, setItem] = useState(null);
   const [itemType, setItemType] = useState(null); // "product" | "deal"
+  const [selectedTierIndex, setSelectedTierIndex] = useState(0);
   const [joining, setJoining] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
@@ -85,17 +86,31 @@ function ProductDetails() {
     }
   };
 
-  const joinDeal = async () => {
+  const joinDeal = async (targetTier) => {
     if (!requireLogin("join a deal")) return;
     setJoining(true);
+
+    const sortedTiers = Array.isArray(item?.tiers) && item.tiers.length > 0
+      ? [...item.tiers].sort((a, b) => a.minUsers - b.minUsers)
+      : [];
+
+    const tierToPledge = targetTier || sortedTiers[selectedTierIndex] || sortedTiers[0];
+
+    const payload = tierToPledge
+      ? {
+          selectedTierPrice: tierToPledge.price,
+          targetMinBuyers: tierToPledge.minUsers,
+        }
+      : {};
+
     try {
       const res = await axios.put(
         `/deals/join/${id}`,
-        {},
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setItem(res.data.deal);
-      alert(res.data.message || "Successfully joined the group buy!");
+      alert(res.data.message || "Successfully pledged your order for the group deal!");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to join deal");
     } finally {
@@ -395,15 +410,53 @@ function ProductDetails() {
               </div>
 
               {Array.isArray(item.tiers) && item.tiers.length > 0 && (
-                <div className="mb-3">
-                  <h6 className="fw-bold text-uppercase text-muted small mb-2">Pricing Tiers</h6>
-                  <div className="d-flex flex-wrap gap-2">
-                    {[...item.tiers].sort((a, b) => a.minUsers - b.minUsers).map((t, i) => {
-                        const isActive = groupPrice === t.price;
+                <div className="mb-4">
+                  <h6 className="fw-bold text-uppercase text-muted small mb-2">
+                    Select Milestone Pricing Tier:
+                  </h6>
+                  <div className="d-flex flex-column gap-2">
+                    {[...item.tiers]
+                      .sort((a, b) => a.minUsers - b.minUsers)
+                      .map((t, i) => {
+                        const isSelected = selectedTierIndex === i;
                         const isUnlocked = joinedUsers >= t.minUsers;
                         return (
-                          <div key={i} className={`badge px-3 py-2 ${isActive ? "bg-success fs-6" : isUnlocked ? "bg-info text-dark" : "bg-light text-dark border"}`}>
-                            {t.minUsers}+ buyers → ₹{t.price} {isActive && " ✓"}
+                          <div
+                            key={i}
+                            className={`p-3 rounded-3 border transition-all cursor-pointer ${
+                              isSelected
+                                ? "border-success bg-success-subtle shadow-sm"
+                                : "border-light-subtle bg-light text-dark"
+                            }`}
+                            onClick={() => setSelectedTierIndex(i)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <div className="d-flex align-items-center justify-content-between">
+                              <div className="d-flex align-items-center gap-2">
+                                <input
+                                  type="radio"
+                                  name="tierOption"
+                                  checked={isSelected}
+                                  onChange={() => setSelectedTierIndex(i)}
+                                  className="form-check-input mt-0"
+                                />
+                                <div>
+                                  <span className="fw-bold d-block text-dark">
+                                    Tiers: {t.minUsers} buyers → ₹{t.price?.toLocaleString("en-IN")}
+                                  </span>
+                                  <small className="text-muted">
+                                    {isUnlocked
+                                      ? "✓ Milestone Unlocked"
+                                      : `Needs ${t.minUsers - joinedUsers > 0 ? t.minUsers - joinedUsers : 0} more buyers`}
+                                  </small>
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <span className="badge bg-success px-3 py-2 rounded-pill fs-7">
+                                  Selected Tier
+                                </span>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -413,7 +466,7 @@ function ProductDetails() {
 
               {nextTier && (
                 <div className="alert alert-info py-2 small mb-3">
-                  🔓 <strong>{nextTier.minUsers - joinedUsers}</strong> more member(s) unlock ₹{nextTier.price}
+                  🔓 <strong>{nextTier.minUsers - joinedUsers}</strong> more member(s) unlock ₹{nextTier.price?.toLocaleString("en-IN")}
                 </div>
               )}
 
@@ -427,17 +480,39 @@ function ProductDetails() {
 
               <div className="mb-4">
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="fw-bold text-secondary">👥 Joined: <strong className="text-dark">{joinedUsers}</strong></span>
-                  <span className="text-muted">Target: <strong className="text-dark">{targetMembers}</strong></span>
+                  <span className="fw-bold text-secondary">👥 Current Progress: <strong className="text-dark">{joinedUsers} / {targetMembers} buyers joined</strong></span>
+                  <span className="text-muted">{Math.round(progress)}%</span>
                 </div>
                 <div className="progress mb-2" style={{ height: "16px", borderRadius: "20px" }}>
                   <div className={`progress-bar progress-bar-striped progress-bar-animated ${isFull ? "bg-success" : "bg-primary bg-gradient"}`} style={{ width: `${progress}%` }} />
                 </div>
               </div>
 
-              <button className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${isFull || item.status !== "active" ? "btn-secondary" : "btn-success"}`} onClick={joinDeal} disabled={joining || isFull || item.status !== "active"}>
-                {joining ? "Joining..." : isFull ? "✓ Deal Complete" : item.status !== "active" ? "🔒 Deal Closed" : "Join Group Buy"}
-              </button>
+              {(() => {
+                const sortedTiers = Array.isArray(item.tiers) && item.tiers.length > 0
+                  ? [...item.tiers].sort((a, b) => a.minUsers - b.minUsers)
+                  : [];
+                const selectedTierObj = sortedTiers[selectedTierIndex] || sortedTiers[0];
+                const activePrice = selectedTierObj ? selectedTierObj.price : groupPrice;
+
+                return (
+                  <button
+                    className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${
+                      isFull || item.status !== "active" ? "btn-secondary" : "btn-success shadow"
+                    }`}
+                    onClick={() => joinDeal(selectedTierObj)}
+                    disabled={joining || isFull || item.status !== "active"}
+                  >
+                    {joining
+                      ? "Pledging..."
+                      : isFull
+                      ? "✓ Deal Complete"
+                      : item.status !== "active"
+                      ? "🔒 Deal Closed"
+                      : `Pledge Deal at ₹${activePrice ? activePrice.toLocaleString("en-IN") : ""}`}
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>

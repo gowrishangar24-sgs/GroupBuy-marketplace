@@ -24,6 +24,8 @@ router.get("/:id", getDealById);
 
 router.post("/create", authMiddleware, sellerMiddleware, validateDeal, createDeal);
 router.put("/join/:id", authMiddleware, joinDeal);
+router.post("/join/:id", authMiddleware, joinDeal);
+router.post("/:id/join", authMiddleware, joinDeal);
 router.delete("/:id", authMiddleware, sellerMiddleware, deleteDeal);
 
 module.exports = router;

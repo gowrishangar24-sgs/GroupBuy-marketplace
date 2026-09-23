@@ -73,21 +73,77 @@ exports.createOrder = async (req, res, next) => {
   }
 };
 
-// GET MY ORDERS (Differentiates between Buyer and Seller views)
 // GET MY ORDERS (Fixed to show personal purchases for all roles)
 exports.getMyOrders = async (req, res, next) => {
   try {
-    // 💡 FIX: Every user (whether buyer or seller) should see the orders THEY purchased
     const query = { buyer: req.user.id };
 
     const orders = await Order.find(query)
       .populate("product", "title image price seller")
+      .populate("deal", "title image originalPrice seller tiers")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: orders.length,
       orders,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// CONFIRM ORDER (from ready_to_confirm to placed)
+exports.confirmOrder = async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId || req.params.id;
+
+    if (!isValidObjectId(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Order ID format",
+      });
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.buyer.toString() !== req.user.id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to confirm this order",
+      });
+    }
+
+    const currentStatus = order.status || order.orderStatus;
+    if (currentStatus !== "ready_to_confirm") {
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be confirmed. Current status is '${currentStatus}'`,
+      });
+    }
+
+    order.status = "placed";
+    order.orderStatus = "placed";
+    order.paymentStatus = "paid";
+    await order.save();
+
+    await order.populate([
+      { path: "product", select: "title image price seller" },
+      { path: "deal", select: "title image originalPrice seller tiers" },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Order confirmed and officially placed!",
+      order,
     });
 
   } catch (error) {

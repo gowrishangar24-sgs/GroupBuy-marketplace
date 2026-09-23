@@ -11,6 +11,7 @@ function Account() {
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [confirmingId, setConfirmingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); // ✅ Added global navigation state tracker
 
   useEffect(() => {
@@ -23,10 +24,33 @@ function Account() {
       .get("/orders/my-orders", {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setOrders(res.data.orders))
+      .then((res) => setOrders(res.data.orders || []))
       .catch((err) => console.log(err))
       .finally(() => setLoadingOrders(false));
   }, []);
+
+  const confirmOrder = async (orderId) => {
+    setConfirmingId(orderId);
+    try {
+      const res = await axios.put(
+        `/orders/${orderId}/confirm`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(res.data.message || "Order confirmed and officially placed!");
+      setOrders((prev) =>
+        prev.map((o) =>
+          o._id === orderId
+            ? res.data.order || { ...o, status: "placed", orderStatus: "placed", paymentStatus: "paid" }
+            : o
+        )
+      );
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to confirm order");
+    } finally {
+      setConfirmingId(null);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -36,6 +60,10 @@ function Account() {
   };
 
   if (!user) return null;
+
+  const readyToConfirmOrders = orders.filter(
+    (o) => o.status === "ready_to_confirm" || o.orderStatus === "ready_to_confirm"
+  );
 
   return (
     <>
@@ -85,6 +113,40 @@ function Account() {
             <div className="card shadow p-4">
               <h4 className="fw-bold mb-4">My Orders</h4>
 
+              {/* URGENT HIGHLIGHTED CALLOUT BANNERS FOR READY_TO_CONFIRM ORDERS */}
+              {readyToConfirmOrders.map((o) => (
+                <div
+                  key={o._id}
+                  className="alert alert-warning border-2 border-warning shadow-sm mb-4 p-3 rounded-3"
+                >
+                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                      <h5 className="alert-heading fw-bold mb-1">
+                        🎉 Milestone Reached! Group discount unlocked at ₹
+                        {(o.selectedTierPrice || o.totalPrice)?.toLocaleString("en-IN")}.
+                      </h5>
+                      <p className="mb-0 text-dark small">
+                        Pledged order for <strong>{o.deal?.title || o.product?.title || "Group Deal"}</strong> is ready to be confirmed!
+                      </p>
+                    </div>
+                    <button
+                      className="btn btn-success fw-bold px-4 py-2 shadow-sm"
+                      onClick={() => confirmOrder(o._id)}
+                      disabled={confirmingId === o._id}
+                    >
+                      {confirmingId === o._id ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" />
+                          Confirming...
+                        </>
+                      ) : (
+                        "Confirm to Place Order"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+
               {loadingOrders ? (
                 <p>Loading orders...</p>
               ) : orders.length === 0 ? (
@@ -96,10 +158,10 @@ function Account() {
                 </div>
               ) : (
                 <div className="table-responsive">
-                  <table className="table table-bordered">
+                  <table className="table table-bordered align-middle">
                     <thead className="table-dark">
                       <tr>
-                        <th>Product</th>
+                        <th>Product / Deal</th>
                         <th>Qty</th>
                         <th>Total</th>
                         <th>Payment</th>
@@ -107,39 +169,78 @@ function Account() {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map((order) => (
-                        <tr key={order._id}>
-                          <td>{order.product?.title || "N/A"}</td>
-                          <td>{order.quantity}</td>
-                          <td>₹{order.totalPrice}</td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                order.paymentStatus === "paid"
-                                  ? "bg-success"
-                                  : order.paymentStatus === "failed"
-                                  ? "bg-danger"
-                                  : "bg-warning text-dark"
-                              }`}
-                            >
-                              {order.paymentStatus}
-                            </span>
-                          </td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                order.orderStatus === "delivered"
-                                  ? "bg-success"
-                                  : order.orderStatus === "cancelled"
-                                  ? "bg-danger"
-                                  : "bg-info text-dark"
-                              }`}
-                            >
-                              {order.orderStatus}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      {orders.map((order) => {
+                        const currentStatus = order.status || order.orderStatus || "placed";
+                        const isPledged = currentStatus === "pledged";
+                        const isReadyToConfirm = currentStatus === "ready_to_confirm";
+                        const isConfirmedOrPlaced =
+                          currentStatus === "placed" ||
+                          currentStatus === "confirmed" ||
+                          currentStatus === "completed" ||
+                          currentStatus === "shipped" ||
+                          currentStatus === "delivered";
+
+                        return (
+                          <tr key={order._id}>
+                            <td>
+                              <div className="fw-semibold">
+                                {order.deal?.title || order.product?.title || "Group Buy Order"}
+                              </div>
+                              {order.selectedTierPrice > 0 && (
+                                <small className="text-muted d-block">
+                                  Milestone Tier: ₹{order.selectedTierPrice?.toLocaleString("en-IN")} ({order.targetMinBuyers} buyers needed)
+                                </small>
+                              )}
+                            </td>
+                            <td>{order.quantity}</td>
+                            <td>₹{order.totalPrice?.toLocaleString("en-IN")}</td>
+                            <td>
+                              <span
+                                className={`badge ${
+                                  order.paymentStatus === "paid"
+                                    ? "bg-success"
+                                    : order.paymentStatus === "failed"
+                                    ? "bg-danger"
+                                    : "bg-warning text-dark"
+                                }`}
+                              >
+                                {order.paymentStatus}
+                              </span>
+                            </td>
+                            <td>
+                              {isPledged && (
+                                <span className="badge bg-warning text-dark px-3 py-2">
+                                  Waiting for Milestone ({order.targetMinBuyers ? `${order.targetMinBuyers} buyers needed` : "Pending"})
+                                </span>
+                              )}
+                              {isReadyToConfirm && (
+                                <div className="d-flex flex-column gap-1">
+                                  <span className="badge bg-warning text-dark px-2 py-1">
+                                    🎉 Milestone Reached!
+                                  </span>
+                                  <button
+                                    className="btn btn-sm btn-success fw-bold"
+                                    onClick={() => confirmOrder(order._id)}
+                                    disabled={confirmingId === order._id}
+                                  >
+                                    {confirmingId === order._id ? "Confirming..." : "Confirm to Place Order"}
+                                  </button>
+                                </div>
+                              )}
+                              {isConfirmedOrPlaced && (
+                                <span className="badge bg-success px-3 py-2">
+                                  Order Placed / Confirmed
+                                </span>
+                              )}
+                              {currentStatus === "cancelled" && (
+                                <span className="badge bg-danger px-3 py-2">
+                                  Cancelled
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
