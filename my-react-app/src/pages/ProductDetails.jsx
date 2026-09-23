@@ -14,7 +14,7 @@ function ProductDetails() {
   // ── 1. ALL REACT HOOKS DECLARED AT THE VERY TOP ──
   const [item, setItem] = useState(null);
   const [itemType, setItemType] = useState(null); // "product" | "deal"
-  const [selectedTierIndex, setSelectedTierIndex] = useState(0);
+  const [selectedTier, setSelectedTier] = useState(null);
   const [joining, setJoining] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
@@ -40,8 +40,15 @@ function ProductDetails() {
           .get(`/deals/${id}`)
           .then((res) => {
             if (res.data.success && res.data.deal) {
-              setItem(res.data.deal);
+              const d = res.data.deal;
+              setItem(d);
               setItemType("deal");
+              if (Array.isArray(d.tiers) && d.tiers.length > 0) {
+                const sorted = [...d.tiers].sort(
+                  (a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers)
+                );
+                setSelectedTier(sorted[0]);
+              }
             }
           })
           .catch((err) => console.log("Item not found:", err));
@@ -86,26 +93,22 @@ function ProductDetails() {
     }
   };
 
-  const joinDeal = async (targetTier) => {
+  const joinDeal = async () => {
     if (!requireLogin("join a deal")) return;
+    if (!selectedTier) {
+      alert("Please select a milestone pricing tier");
+      return;
+    }
     setJoining(true);
 
-    const sortedTiers = Array.isArray(item?.tiers) && item.tiers.length > 0
-      ? [...item.tiers].sort((a, b) => a.minUsers - b.minUsers)
-      : [];
-
-    const tierToPledge = targetTier || sortedTiers[selectedTierIndex] || sortedTiers[0];
-
-    const payload = tierToPledge
-      ? {
-          selectedTierPrice: tierToPledge.price,
-          targetMinBuyers: tierToPledge.minUsers,
-        }
-      : {};
+    const payload = {
+      selectedTierPrice: selectedTier.price,
+      targetMinBuyers: selectedTier.minUsers || selectedTier.targetMinBuyers,
+    };
 
     try {
-      const res = await axios.put(
-        `/deals/join/${id}`,
+      const res = await axios.post(
+        `/deals/${id}/join`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -411,51 +414,77 @@ function ProductDetails() {
 
               {Array.isArray(item.tiers) && item.tiers.length > 0 && (
                 <div className="mb-4">
-                  <h6 className="fw-bold text-uppercase text-muted small mb-2">
-                    Select Milestone Pricing Tier:
+                  <h6 className="fw-bold text-uppercase text-muted small mb-3">
+                    🏷️ Milestone Pricing Tiers (Select to Pledge):
                   </h6>
-                  <div className="d-flex flex-column gap-2">
+                  <div className="d-flex flex-column gap-3">
                     {[...item.tiers]
-                      .sort((a, b) => a.minUsers - b.minUsers)
-                      .map((t, i) => {
-                        const isSelected = selectedTierIndex === i;
-                        const isUnlocked = joinedUsers >= t.minUsers;
+                      .sort((a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers))
+                      .map((tier, i) => {
+                        const minReq = tier.minUsers || tier.targetMinBuyers || 1;
+                        const isSelected =
+                          selectedTier &&
+                          selectedTier.price === tier.price &&
+                          (selectedTier.minUsers === minReq || selectedTier.targetMinBuyers === minReq);
+                        const savings = item.originalPrice ? item.originalPrice - tier.price : 0;
+                        const savingsPercent = item.originalPrice && item.originalPrice > 0
+                          ? Math.round((savings / item.originalPrice) * 100)
+                          : 0;
+
                         return (
                           <div
                             key={i}
-                            className={`p-3 rounded-3 border transition-all cursor-pointer ${
+                            className={`p-3 rounded-3 border cursor-pointer ${
                               isSelected
                                 ? "border-success bg-success-subtle shadow-sm"
                                 : "border-light-subtle bg-light text-dark"
                             }`}
-                            onClick={() => setSelectedTierIndex(i)}
-                            style={{ cursor: "pointer" }}
+                            onClick={() => setSelectedTier(tier)}
+                            style={{ cursor: "pointer", transition: "all 0.2s ease" }}
                           >
-                            <div className="d-flex align-items-center justify-content-between">
-                              <div className="d-flex align-items-center gap-2">
+                            <div className="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+                              <div className="d-flex align-items-start gap-3">
                                 <input
                                   type="radio"
-                                  name="tierOption"
-                                  checked={isSelected}
-                                  onChange={() => setSelectedTierIndex(i)}
-                                  className="form-check-input mt-0"
+                                  name="dealTierOption"
+                                  checked={!!isSelected}
+                                  onChange={() => setSelectedTier(tier)}
+                                  className="form-check-input mt-1"
+                                  style={{ transform: "scale(1.2)" }}
                                 />
                                 <div>
-                                  <span className="fw-bold d-block text-dark">
-                                    Tiers: {t.minUsers} buyers → ₹{t.price?.toLocaleString("en-IN")}
-                                  </span>
-                                  <small className="text-muted">
-                                    {isUnlocked
-                                      ? "✓ Milestone Unlocked"
-                                      : `Needs ${t.minUsers - joinedUsers > 0 ? t.minUsers - joinedUsers : 0} more buyers`}
+                                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <h5 className="fw-bold m-0 text-success">
+                                      ₹{tier.price?.toLocaleString("en-IN")}
+                                    </h5>
+                                    {savings > 0 && (
+                                      <span className="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small">
+                                        Save ₹{savings.toLocaleString("en-IN")} ({savingsPercent}% OFF)
+                                      </span>
+                                    )}
+                                  </div>
+                                  <small className="text-secondary fw-medium d-block mt-1">
+                                    Requires minimum <strong>{minReq}</strong> buyers
                                   </small>
                                 </div>
                               </div>
-                              {isSelected && (
-                                <span className="badge bg-success px-3 py-2 rounded-pill fs-7">
-                                  Selected Tier
+
+                              <div className="text-end">
+                                <span
+                                  className={`badge ${
+                                    joinedUsers >= minReq
+                                      ? "bg-success"
+                                      : "bg-primary-subtle text-primary border border-primary-subtle"
+                                  } px-3 py-2 rounded-pill fs-7`}
+                                >
+                                  👥 {joinedUsers} / {minReq} pledged
                                 </span>
-                              )}
+                                {isSelected && (
+                                  <small className="d-block text-success fw-bold mt-1">
+                                    ✓ Selected
+                                  </small>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -488,31 +517,23 @@ function ProductDetails() {
                 </div>
               </div>
 
-              {(() => {
-                const sortedTiers = Array.isArray(item.tiers) && item.tiers.length > 0
-                  ? [...item.tiers].sort((a, b) => a.minUsers - b.minUsers)
-                  : [];
-                const selectedTierObj = sortedTiers[selectedTierIndex] || sortedTiers[0];
-                const activePrice = selectedTierObj ? selectedTierObj.price : groupPrice;
-
-                return (
-                  <button
-                    className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${
-                      isFull || item.status !== "active" ? "btn-secondary" : "btn-success shadow"
-                    }`}
-                    onClick={() => joinDeal(selectedTierObj)}
-                    disabled={joining || isFull || item.status !== "active"}
-                  >
-                    {joining
-                      ? "Pledging..."
-                      : isFull
-                      ? "✓ Deal Complete"
-                      : item.status !== "active"
-                      ? "🔒 Deal Closed"
-                      : `Pledge Deal at ₹${activePrice ? activePrice.toLocaleString("en-IN") : ""}`}
-                  </button>
-                );
-              })()}
+              <button
+                className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${
+                  isFull || item.status !== "active" || !selectedTier ? "btn-secondary" : "btn-success shadow"
+                }`}
+                onClick={joinDeal}
+                disabled={joining || isFull || item.status !== "active" || !selectedTier}
+              >
+                {joining
+                  ? "Pledging..."
+                  : isFull
+                  ? "✓ Deal Complete"
+                  : item.status !== "active"
+                  ? "🔒 Deal Closed"
+                  : !selectedTier
+                  ? "Select a Tier to Pledge"
+                  : `Pledge Deal at ₹${selectedTier.price?.toLocaleString("en-IN")}`}
+              </button>
             </div>
           </div>
         </div>

@@ -12,7 +12,6 @@ const emptyForm = {
   description: "",
   category: "electronics",
   originalPrice: "",
-  targetMembers: "",
   seller: "",
   deadline: "",
 };
@@ -95,11 +94,6 @@ function CreateDeal() {
       }
     }
 
-    if (Number(formData.targetMembers) < 2) {
-      alert("Target Members must be at least 2");
-      return;
-    }
-
     if (!formData.deadline) {
       alert("Please set a deal deadline");
       return;
@@ -116,11 +110,16 @@ function CreateDeal() {
       price: Number(t.price),
     }));
 
+    // Auto-compute targetMembers from the highest tier requirement
+    const computedTargetMembers = tiers && tiers.length > 0
+      ? Math.max(...tiers.map((t) => Number(t.minUsers || t.targetMinBuyers) || 0))
+      : 1;
+
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
         "/deals/create",
-        { ...formData, tiers: parsedTiers },
+        { ...formData, targetMembers: computedTargetMembers, tiers: parsedTiers },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -376,23 +375,9 @@ function CreateDeal() {
               </div>
             </div>
 
-            {/* 6. Target Members & Deadline */}
+            {/* 6. Deadline (Full Width col-12) */}
             <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label fw-semibold">Target Members</label>
-                <input
-                  type="number"
-                  name="targetMembers"
-                  className="form-control"
-                  placeholder="e.g. 20"
-                  value={formData.targetMembers}
-                  onChange={handleChange}
-                  min="2"
-                  required
-                />
-              </div>
-
-              <div className="col-md-6 mb-3">
+              <div className="col-12 mb-3">
                 <label className="form-label fw-semibold">Deal Deadline</label>
                 <input
                   type="datetime-local"
