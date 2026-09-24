@@ -625,48 +625,53 @@ function ProductDetails() {
                   </div>
                 );
               })()}
+{(() => {
+  let btnText = "";
+  let btnClass = "";
+  let btnDisabled = false;
 
-              {(() => {
-                let btnText = "";
-                let btnClass = "";
-                let btnDisabled = false;
+  // 1. Only consider completed if participants actually exist (> 0)
+  const isDealCompleted = (joinedUsers > 0) && (item.status === "completed" || isFull);
 
-                if (joining) {
-                  btnText = "Pledging...";
-                  btnClass = "btn-secondary";
-                  btnDisabled = true;
-                } else if (item.status === "completed" || isFull) {
-                  btnText = "🔒 Deal Completed • Orders Placed";
-                  btnClass = "btn-secondary";
-                  btnDisabled = true;
-                } else if (hasJoined) {
-                  btnText = "✓ Order Placed";
-                  btnClass = "btn-success";
-                  btnDisabled = true;
-                } else if (item.status !== "active") {
-                  btnText = "🔒 Deal Closed";
-                  btnClass = "btn-secondary";
-                  btnDisabled = true;
-                } else if (!selectedTier) {
-                  btnText = "Select a Tier to Pledge";
-                  btnClass = "btn-secondary";
-                  btnDisabled = true;
-                } else {
-                  btnText = `Pledge Deal at ₹${selectedTier.price?.toLocaleString("en-IN")}`;
-                  btnClass = "btn-success shadow";
-                  btnDisabled = false;
-                }
+  // 2. Accept both "active" and "open"
+  const isDealActive = item.status === "active" || item.status === "open";
 
-                return (
-                  <button
-                    className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${btnClass}`}
-                    onClick={joinDeal}
-                    disabled={btnDisabled}
-                  >
-                    {btnText}
-                  </button>
-                );
-              })()}
+  if (joining) {
+    btnText = "Pledging...";
+    btnClass = "btn-secondary";
+    btnDisabled = true;
+  } else if (isDealCompleted) {
+    btnText = "🔒 Deal Completed • Orders Placed";
+    btnClass = "btn-secondary";
+    btnDisabled = true;
+  } else if (hasJoined && joinedUsers > 0) {
+    btnText = "✓ Order Placed";
+    btnClass = "btn-success";
+    btnDisabled = true;
+  } else if (!isDealActive) {
+    btnText = "🔒 Deal Closed";
+    btnClass = "btn-secondary";
+    btnDisabled = true;
+  } else if (!selectedTier) {
+    btnText = "Select a Tier to Pledge";
+    btnClass = "btn-secondary";
+    btnDisabled = true;
+  } else {
+    btnText = `Pledge Deal at ₹${selectedTier.price?.toLocaleString("en-IN")}`;
+    btnClass = "btn-success shadow";
+    btnDisabled = false;
+  }
+
+  return (
+    <button
+      className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${btnClass}`}
+      onClick={joinDeal}
+      disabled={btnDisabled}
+    >
+      {btnText}
+    </button>
+  );
+})()}
             </div>
           </div>
         </div>
