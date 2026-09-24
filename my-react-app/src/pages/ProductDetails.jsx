@@ -136,9 +136,17 @@ function ProductDetails() {
     }
     setJoining(true);
 
+    const targetMembers =
+      selectedTier?.minUsers ||
+      selectedTier?.targetMinBuyers ||
+      selectedTier?.targetMembers ||
+      item?.targetMembers ||
+      1;
+
     const payload = {
       selectedTierPrice: selectedTier.price,
-      targetMinBuyers: selectedTier.minUsers || selectedTier.targetMinBuyers,
+      targetMinBuyers: targetMembers,
+      targetMembers: targetMembers,
     };
 
     try {
