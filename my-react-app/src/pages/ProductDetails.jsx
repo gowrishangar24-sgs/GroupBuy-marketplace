@@ -47,13 +47,31 @@ function ProductDetails() {
                 const sorted = [...d.tiers].sort(
                   (a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers)
                 );
-                setSelectedTier(sorted[0]);
+                const firstUnlocked = sorted.find(
+                  (t) => (d.joinedUsers || 0) < (t.minUsers || t.targetMinBuyers)
+                );
+                setSelectedTier(firstUnlocked || null);
               }
             }
           })
           .catch((err) => console.log("Item not found:", err));
       });
   }, [id]);
+
+  useEffect(() => {
+    if (itemType === "deal" && item && Array.isArray(item.tiers) && item.tiers.length > 0) {
+      const sorted = [...item.tiers].sort(
+        (a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers)
+      );
+      const firstUnlocked = sorted.find(
+        (t) => (item.joinedUsers || 0) < (t.minUsers || t.targetMinBuyers)
+      );
+      const currentTierMin = selectedTier ? (selectedTier.minUsers || selectedTier.targetMinBuyers) : null;
+      if (!selectedTier || (currentTierMin !== null && (item.joinedUsers || 0) >= currentTierMin)) {
+        setSelectedTier(firstUnlocked || null);
+      }
+    }
+  }, [item, itemType]);
 
   const requireLogin = (action) => {
     if (!user) {
@@ -96,7 +114,7 @@ function ProductDetails() {
   const joinDeal = async () => {
     if (!requireLogin("join a deal")) return;
     if (!selectedTier) {
-      alert("Please select a milestone pricing tier");
+      alert("Please select an unlocked milestone pricing tier");
       return;
     }
     setJoining(true);
@@ -112,7 +130,17 @@ function ProductDetails() {
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setItem(res.data.deal);
+      const updatedDeal = res.data.deal;
+      setItem(updatedDeal);
+      if (Array.isArray(updatedDeal.tiers) && updatedDeal.tiers.length > 0) {
+        const sorted = [...updatedDeal.tiers].sort(
+          (a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers)
+        );
+        const firstUnlocked = sorted.find(
+          (t) => (updatedDeal.joinedUsers || 0) < (t.minUsers || t.targetMinBuyers)
+        );
+        setSelectedTier(firstUnlocked || null);
+      }
       alert(res.data.message || "Successfully pledged your order for the group deal!");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to join deal");
@@ -422,10 +450,13 @@ function ProductDetails() {
                       .sort((a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers))
                       .map((tier, i) => {
                         const minReq = tier.minUsers || tier.targetMinBuyers || 1;
+                        const isLocked = joinedUsers >= minReq;
+                        const displayCount = Math.min(joinedUsers, minReq);
                         const isSelected =
+                          !isLocked &&
                           selectedTier &&
                           selectedTier.price === tier.price &&
-                          (selectedTier.minUsers === minReq || selectedTier.targetMinBuyers === minReq);
+                          ((selectedTier.minUsers || selectedTier.targetMinBuyers) === minReq);
                         const savings = item.originalPrice ? item.originalPrice - tier.price : 0;
                         const savingsPercent = item.originalPrice && item.originalPrice > 0
                           ? Math.round((savings / item.originalPrice) * 100)
@@ -434,13 +465,20 @@ function ProductDetails() {
                         return (
                           <div
                             key={i}
-                            className={`p-3 rounded-3 border cursor-pointer ${
-                              isSelected
-                                ? "border-success bg-success-subtle shadow-sm"
-                                : "border-light-subtle bg-light text-dark"
+                            className={`p-3 rounded-3 border ${
+                              isLocked
+                                ? "border-secondary-subtle bg-light text-muted opacity-75"
+                                : isSelected
+                                ? "border-success bg-success-subtle shadow-sm cursor-pointer"
+                                : "border-light-subtle bg-light text-dark cursor-pointer"
                             }`}
-                            onClick={() => setSelectedTier(tier)}
-                            style={{ cursor: "pointer", transition: "all 0.2s ease" }}
+                            onClick={() => {
+                              if (!isLocked) setSelectedTier(tier);
+                            }}
+                            style={{
+                              cursor: isLocked ? "not-allowed" : "pointer",
+                              transition: "all 0.2s ease",
+                            }}
                           >
                             <div className="d-flex align-items-start justify-content-between gap-2 flex-wrap">
                               <div className="d-flex align-items-start gap-3">
@@ -448,13 +486,16 @@ function ProductDetails() {
                                   type="radio"
                                   name="dealTierOption"
                                   checked={!!isSelected}
-                                  onChange={() => setSelectedTier(tier)}
+                                  disabled={isLocked}
+                                  onChange={() => {
+                                    if (!isLocked) setSelectedTier(tier);
+                                  }}
                                   className="form-check-input mt-1"
                                   style={{ transform: "scale(1.2)" }}
                                 />
                                 <div>
                                   <div className="d-flex align-items-center gap-2 flex-wrap">
-                                    <h5 className="fw-bold m-0 text-success">
+                                    <h5 className={`fw-bold m-0 ${isLocked ? "text-muted" : "text-success"}`}>
                                       ₹{tier.price?.toLocaleString("en-IN")}
                                     </h5>
                                     {savings > 0 && (
@@ -472,17 +513,24 @@ function ProductDetails() {
                               <div className="text-end">
                                 <span
                                   className={`badge ${
-                                    joinedUsers >= minReq
-                                      ? "bg-success"
+                                    isLocked
+                                      ? "bg-secondary text-white"
                                       : "bg-primary-subtle text-primary border border-primary-subtle"
                                   } px-3 py-2 rounded-pill fs-7`}
                                 >
-                                  👥 {joinedUsers} / {minReq} pledged
+                                  👥 {displayCount} / {minReq} {isLocked ? "Filled" : "pledged"}
                                 </span>
-                                {isSelected && (
+                                {isSelected && !isLocked && (
                                   <small className="d-block text-success fw-bold mt-1">
                                     ✓ Selected
                                   </small>
+                                )}
+                                {isLocked && (
+                                  <div className="mt-1">
+                                    <span className="badge bg-dark text-white rounded-pill px-2 py-1 small">
+                                      🔒 Locked
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                             </div>

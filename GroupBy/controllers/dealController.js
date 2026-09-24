@@ -119,14 +119,28 @@ exports.joinDeal = async (req, res, next) => {
     // Fallback if client did not supply specific tier parameters
     if (!selectedTierPrice || !targetMinBuyers) {
       if (deal.tiers && deal.tiers.length > 0) {
-        const sorted = [...deal.tiers].sort((a, b) => a.minUsers - b.minUsers);
-        const active = sorted.find((t) => deal.joinedUsers >= t.minUsers) || sorted[0];
-        selectedTierPrice = selectedTierPrice || active.price;
-        targetMinBuyers = targetMinBuyers || active.minUsers;
+        const sorted = [...deal.tiers].sort((a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers));
+        const unlockedTier = sorted.find((t) => deal.joinedUsers < (t.minUsers || t.targetMinBuyers));
+        if (!unlockedTier) {
+          return res.status(400).json({
+            success: false,
+            message: "All milestone tiers for this deal have already been completed and locked.",
+          });
+        }
+        selectedTierPrice = selectedTierPrice || unlockedTier.price;
+        targetMinBuyers = targetMinBuyers || (unlockedTier.minUsers || unlockedTier.targetMinBuyers);
       } else {
         selectedTierPrice = selectedTierPrice || deal.originalPrice;
         targetMinBuyers = targetMinBuyers || 1;
       }
+    }
+
+    // Backend Validation: Reject request if target milestone is already completed/locked
+    if (deal.joinedUsers >= Number(targetMinBuyers)) {
+      return res.status(400).json({
+        success: false,
+        message: `The milestone for ${targetMinBuyers} buyers has already been completed and locked.`,
+      });
     }
 
     deal.joinedUsers += 1;
