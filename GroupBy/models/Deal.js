@@ -131,6 +131,19 @@ const dealSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    participants: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        joinedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

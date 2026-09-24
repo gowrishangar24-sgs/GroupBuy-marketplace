@@ -143,7 +143,20 @@ exports.joinDeal = async (req, res, next) => {
       });
     }
 
-    deal.joinedUsers += 1;
+    // Check if user already joined this deal
+    if (!deal.participants) deal.participants = [];
+    const alreadyJoined = deal.participants.some(
+      (p) => p.user && p.user.toString() === req.user.id.toString()
+    );
+    if (alreadyJoined) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already pledged for this deal.",
+      });
+    }
+
+    deal.participants.push({ user: req.user.id, joinedAt: new Date() });
+    deal.joinedUsers = deal.participants.length;
     if (deal.joinedUsers >= deal.targetMembers) deal.status = "completed";
     await deal.save();
 

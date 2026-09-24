@@ -113,6 +113,23 @@ function ProductDetails() {
 
   const joinDeal = async () => {
     if (!requireLogin("join a deal")) return;
+    const userId = user?._id || user?.id;
+    const alreadyJoined =
+      Boolean(userId) &&
+      Array.isArray(item?.participants) &&
+      item.participants.some(
+        (p) =>
+          p.user === userId ||
+          p.user?._id === userId ||
+          p.user?.id === userId ||
+          p === userId ||
+          (typeof p.user === "string" && p.user === userId?.toString()) ||
+          (p.user?._id && p.user._id.toString() === userId?.toString())
+      );
+    if (alreadyJoined) {
+      alert("You have already pledged for this deal!");
+      return;
+    }
     if (!selectedTier) {
       alert("Please select an unlocked milestone pricing tier");
       return;
@@ -398,6 +415,20 @@ function ProductDetails() {
   const discount = item.originalPrice && groupPrice ? Math.round(((item.originalPrice - groupPrice) / item.originalPrice) * 100) : 0;
   const isFull = joinedUsers >= targetMembers;
 
+  const userId = user?._id || user?.id;
+  const hasJoined =
+    Boolean(userId) &&
+    Array.isArray(item?.participants) &&
+    item.participants.some(
+      (p) =>
+        p.user === userId ||
+        p.user?._id === userId ||
+        p.user?.id === userId ||
+        p === userId ||
+        (typeof p.user === "string" && p.user === userId?.toString()) ||
+        (p.user?._id && p.user._id.toString() === userId?.toString())
+    );
+
   const nextTier = Array.isArray(item.tiers) && item.tiers.length > 0
       ? [...item.tiers].sort((a, b) => a.minUsers - b.minUsers).find((t) => t.minUsers > joinedUsers)
       : null;
@@ -586,23 +617,47 @@ function ProductDetails() {
                 );
               })()}
 
-              <button
-                className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${
-                  isFull || item.status !== "active" || !selectedTier ? "btn-secondary" : "btn-success shadow"
-                }`}
-                onClick={joinDeal}
-                disabled={joining || isFull || item.status !== "active" || !selectedTier}
-              >
-                {joining
-                  ? "Pledging..."
-                  : isFull
-                  ? "✓ Deal Complete"
-                  : item.status !== "active"
-                  ? "🔒 Deal Closed"
-                  : !selectedTier
-                  ? "Select a Tier to Pledge"
-                  : `Pledge Deal at ₹${selectedTier.price?.toLocaleString("en-IN")}`}
-              </button>
+              {(() => {
+                let btnText = "";
+                let btnClass = "";
+                let btnDisabled = false;
+
+                if (joining) {
+                  btnText = "Pledging...";
+                  btnClass = "btn-secondary";
+                  btnDisabled = true;
+                } else if (item.status === "completed" || isFull) {
+                  btnText = "🔒 Deal Completed • Orders Placed";
+                  btnClass = "btn-secondary";
+                  btnDisabled = true;
+                } else if (hasJoined) {
+                  btnText = "✓ Order Placed";
+                  btnClass = "btn-success";
+                  btnDisabled = true;
+                } else if (item.status !== "active") {
+                  btnText = "🔒 Deal Closed";
+                  btnClass = "btn-secondary";
+                  btnDisabled = true;
+                } else if (!selectedTier) {
+                  btnText = "Select a Tier to Pledge";
+                  btnClass = "btn-secondary";
+                  btnDisabled = true;
+                } else {
+                  btnText = `Pledge Deal at ₹${selectedTier.price?.toLocaleString("en-IN")}`;
+                  btnClass = "btn-success shadow";
+                  btnDisabled = false;
+                }
+
+                return (
+                  <button
+                    className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${btnClass}`}
+                    onClick={joinDeal}
+                    disabled={btnDisabled}
+                  >
+                    {btnText}
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>
