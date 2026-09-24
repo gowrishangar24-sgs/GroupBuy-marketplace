@@ -422,7 +422,11 @@ function ProductDetails() {
 
   const progress = targetMembers > 0 ? Math.min((joinedUsers / targetMembers) * 100, 100) : 0;
   const discount = item.originalPrice && groupPrice ? Math.round(((item.originalPrice - groupPrice) / item.originalPrice) * 100) : 0;
-  const isFull = joinedUsers >= targetMembers;
+  
+  const currentTarget = selectedTier
+    ? (selectedTier.minUsers || selectedTier.targetMinBuyers || targetMembers || 1)
+    : (targetMembers || 1);
+  const isFull = joinedUsers > 0 && joinedUsers >= currentTarget;
 
   const userId = user?._id || user?.id;
   const hasJoined =
@@ -633,8 +637,8 @@ function ProductDetails() {
   // 1. Only consider completed if participants actually exist (> 0)
   const isDealCompleted = (joinedUsers > 0) && (item.status === "completed" || isFull);
 
-  // 2. Accept both "active" and "open"
-  const isDealActive = item.status === "active" || item.status === "open";
+  // 2. Accept both "active" and "open" (and fallback if status is omitted)
+  const isDealActive = !item.status || item.status === "active" || item.status === "open";
 
   if (joining) {
     btnText = "Pledging...";
