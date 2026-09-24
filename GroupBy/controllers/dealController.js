@@ -157,8 +157,6 @@ exports.joinDeal = async (req, res, next) => {
 
     deal.participants.push({ user: req.user.id, joinedAt: new Date() });
     deal.joinedUsers = deal.participants.length;
-    if (deal.joinedUsers >= deal.targetMembers) deal.status = "completed";
-    await deal.save();
 
     // Create pledged Order
     const newOrder = await Order.create({
@@ -188,6 +186,16 @@ exports.joinDeal = async (req, res, next) => {
       await ord.save();
     }
 
+    // Reset workflow: When the milestone/target goal is reached, reset joinedUsers to 0 and empty participants
+    let poolReset = false;
+    if (deal.joinedUsers >= deal.targetMembers) {
+      deal.joinedUsers = 0;
+      deal.participants = [];
+      deal.status = "active";
+      poolReset = true;
+    }
+    await deal.save();
+
     const refreshedOrder = await Order.findById(newOrder._id)
       .populate("deal", "title image originalPrice seller tiers")
       .populate("product", "title image price seller");
@@ -200,8 +208,11 @@ exports.joinDeal = async (req, res, next) => {
     if (refreshedOrder && refreshedOrder.status === "ready_to_confirm") {
       message += " 🎉 Milestone reached! Order is ready to confirm.";
     }
+    if (poolReset) {
+      message += " 🚀 Milestone goal reached! Pool counters reset for a fresh round.";
+    }
 
-    return res.status(200).json({ success: true, message, deal: obj, order: refreshedOrder });
+    return res.status(200).json({ success: true, message, deal: obj, order: refreshedOrder, poolReset });
   } catch (error) {
     if (typeof next === "function") {
       return next(error);

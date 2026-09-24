@@ -148,8 +148,16 @@ function ProductDetails() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const updatedDeal = res.data.deal;
-      setItem(updatedDeal);
-      if (Array.isArray(updatedDeal.tiers) && updatedDeal.tiers.length > 0) {
+      if (res.data.poolReset || updatedDeal?.joinedUsers === 0) {
+        setItem({
+          ...updatedDeal,
+          joinedUsers: 0,
+          participants: [],
+        });
+      } else {
+        setItem(updatedDeal);
+      }
+      if (Array.isArray(updatedDeal?.tiers) && updatedDeal.tiers.length > 0) {
         const sorted = [...updatedDeal.tiers].sort(
           (a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers)
         );
@@ -159,6 +167,7 @@ function ProductDetails() {
         setSelectedTier(firstUnlocked || null);
       }
       alert(res.data.message || "Successfully pledged your order for the group deal!");
+      navigate("/orders");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to join deal");
     } finally {

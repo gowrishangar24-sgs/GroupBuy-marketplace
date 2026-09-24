@@ -169,6 +169,13 @@ function GroupBuyOffcanvas({ isOpen, onClose, searchTerm, setSearchTerm }) {
               >
                 ❤️ Wishlist
               </Link>
+              <Link
+                to="/orders"
+                onClick={onClose}
+                className="list-group-item list-group-item-action border-0 ps-0 py-2"
+              >
+                📦 Orders
+              </Link>
             </div>
           </div>
 
