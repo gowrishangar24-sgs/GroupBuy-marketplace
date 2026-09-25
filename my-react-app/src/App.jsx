@@ -21,6 +21,7 @@ import CreateDeal from "./pages/CreateDeal";
 import MyDeals from "./pages/MyDeals";
 import MyOrders from "./pages/MyOrders";
 import Orders from "./pages/Orders";
+import Checkout from "./pages/Checkout";
 import Account from "./pages/Account";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/WishList";
@@ -145,6 +146,7 @@ function App() {
 
           {/* Product / Deal Detail */}
           <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/checkout" element={<Checkout />} />
 
           {/* Dynamic category routes */}
           {CATEGORIES.map(({ paths, props }) =>

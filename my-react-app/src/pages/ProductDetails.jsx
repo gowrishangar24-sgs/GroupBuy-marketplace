@@ -111,8 +111,8 @@ function ProductDetails() {
     }
   };
 
-  const joinDeal = async () => {
-    if (!requireLogin("join a deal")) return;
+  const handleProceedToCheckout = () => {
+    if (!requireLogin("order a deal")) return;
     const userId = user?._id || user?.id;
     const alreadyJoined =
       Boolean(userId) &&
@@ -127,58 +127,31 @@ function ProductDetails() {
           (p.user?._id && p.user._id.toString() === userId?.toString())
       );
     if (alreadyJoined) {
-      alert("You have already pledged for this deal!");
+      alert("You have already ordered this deal!");
       return;
     }
     if (!selectedTier) {
       alert("Please select an unlocked milestone pricing tier");
       return;
     }
-    setJoining(true);
 
-    const targetMembers = Number(selectedTier?.minUsers || selectedTier?.targetMembers || selectedTier?.targetMinBuyers || 5);
+    const targetMembers = Number(selectedTier?.minUsers || selectedTier?.targetMembers || selectedTier?.targetMinBuyers || item?.targetMembers || 5);
+    const selectedPrice = Number(selectedTier?.price || item?.groupPrice || item?.originalPrice);
 
-    const payload = {
-      dealId: item._id,
-      tierId: selectedTier?._id || selectedTier?.id,
-      price: selectedTier?.price || item?.price,
-      selectedTierPrice: selectedTier?.price || item?.price,
-      targetMinBuyers: targetMembers,
-      targetMembers: targetMembers,
-    };
-
-    try {
-      const res = await axios.post(
-        `/deals/${id}/join`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const updatedDeal = res.data.deal;
-      if (res.data.poolReset || updatedDeal?.joinedUsers === 0) {
-        setItem({
-          ...updatedDeal,
-          joinedUsers: 0,
-          participants: [],
-        });
-      } else {
-        setItem(updatedDeal);
-      }
-      if (Array.isArray(updatedDeal?.tiers) && updatedDeal.tiers.length > 0) {
-        const sorted = [...updatedDeal.tiers].sort(
-          (a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers)
-        );
-        const firstUnlocked = sorted.find(
-          (t) => (updatedDeal.joinedUsers || 0) < (t.minUsers || t.targetMinBuyers)
-        );
-        setSelectedTier(firstUnlocked || null);
-      }
-      alert(res.data.message || "Successfully pledged your order for the group deal!");
-      navigate("/orders");
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to join deal");
-    } finally {
-      setJoining(false);
-    }
+    navigate("/checkout", {
+      state: {
+        dealId: item._id,
+        title: item.title,
+        image: item.image,
+        price: selectedPrice,
+        selectedPrice,
+        selectedTier,
+        tierId: selectedTier?._id || selectedTier?.id,
+        targetMembers,
+        originalPrice: item.originalPrice,
+        item,
+      },
+    });
   };
 
   const addToCart = async () => {
@@ -647,7 +620,7 @@ function ProductDetails() {
   const isDealActive = !item.status || item.status === "active" || item.status === "open";
 
   if (joining) {
-    btnText = "Pledging...";
+    btnText = "Processing...";
     btnClass = "btn-secondary";
     btnDisabled = true;
   } else if (isDealCompleted) {
@@ -663,11 +636,11 @@ function ProductDetails() {
     btnClass = "btn-secondary";
     btnDisabled = true;
   } else if (!selectedTier) {
-    btnText = "Select a Tier to Pledge";
+    btnText = "Select a Tier to Order";
     btnClass = "btn-secondary";
     btnDisabled = true;
   } else {
-    btnText = `Pledge Deal at ₹${selectedTier.price?.toLocaleString("en-IN")}`;
+    btnText = `Order Now at ₹${selectedTier.price?.toLocaleString("en-IN")}`;
     btnClass = "btn-success shadow";
     btnDisabled = false;
   }
@@ -675,7 +648,7 @@ function ProductDetails() {
   return (
     <button
       className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${btnClass}`}
-      onClick={joinDeal}
+      onClick={handleProceedToCheckout}
       disabled={btnDisabled}
     >
       {btnText}
