@@ -22,6 +22,7 @@ const authMiddleware = async (req, res, next) => {
     // ✅ OPTIMIZATION: Pass token payload properties directly to the req object
     req.user = {
       id: decoded.id,
+      _id: decoded.id,
       role: decoded.role // Now safely available for your role middleware downstream
     };
 

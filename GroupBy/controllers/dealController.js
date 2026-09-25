@@ -109,33 +109,57 @@ exports.joinDeal = async (req, res, next) => {
   try {
     const Order = require("../models/Order");
 
-    const deal = await Deal.findById(req.params.id);
-    if (!deal) return res.status(404).json({ success: false, message: "Deal not found" });
-    if (deal.status !== "active") return res.status(400).json({ success: false, message: "This deal is no longer active" });
-    if (deal.joinedUsers >= deal.targetMembers) return res.status(400).json({ success: false, message: "Deal is already full" });
-
-    let { selectedTierPrice, targetMinBuyers, shippingAddress, quantity = 1 } = req.body;
-
-    // Fallback if client did not supply specific tier parameters
-    if (!selectedTierPrice || !targetMinBuyers) {
-      if (deal.tiers && deal.tiers.length > 0) {
-        const sorted = [...deal.tiers].sort((a, b) => (a.minUsers || a.targetMinBuyers) - (b.minUsers || b.targetMinBuyers));
-        const unlockedTier = sorted.find((t) => deal.joinedUsers < (t.minUsers || t.targetMinBuyers));
-        if (!unlockedTier) {
-          return res.status(400).json({
-            success: false,
-            message: "All milestone tiers for this deal have already been completed and locked.",
-          });
-        }
-        selectedTierPrice = selectedTierPrice || unlockedTier.price;
-        targetMinBuyers = targetMinBuyers || (unlockedTier.minUsers || unlockedTier.targetMinBuyers);
-      } else {
-        selectedTierPrice = selectedTierPrice || deal.originalPrice;
-        targetMinBuyers = targetMinBuyers || 1;
-      }
+    // 4. Ensure user authentication attached properly
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Unauthorized: Missing authentication token" });
+    }
+    const userId = req.user._id || req.user.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized: Invalid user context" });
     }
 
-    // Backend Validation: Reject request if target milestone is already completed/locked
+    // 2. Fetch the deal record first
+    const dealId = req.params.id || req.body.dealId;
+    const deal = await Deal.findById(dealId);
+    if (!deal) return res.status(404).json({ success: false, message: "Deal not found" });
+    if (deal.status !== "active") return res.status(400).json({ success: false, message: "This deal is no longer active" });
+
+    let { tierId, shippingAddress, quantity = 1 } = req.body;
+
+    // Locate tier directly from database if tierId supplied
+    let matchedTier = null;
+    if (tierId && Array.isArray(deal.tiers)) {
+      matchedTier = deal.tiers.find(
+        (t) => (t._id && t._id.toString() === tierId.toString()) || t.id === tierId
+      );
+    }
+
+    // 1 & 3. Derive target members and price directly from the DB record rather than relying strictly on req.body
+    const target = req.body.targetMembers ||
+      (matchedTier ? (matchedTier.minUsers || matchedTier.targetMembers || matchedTier.targetMinBuyers) : null) ||
+      deal.targetMembers ||
+      deal.tiers?.[0]?.minUsers ||
+      5;
+
+    const price = req.body.price ||
+      req.body.selectedTierPrice ||
+      (matchedTier ? matchedTier.price : null) ||
+      deal.tiers?.[0]?.price ||
+      deal.originalPrice;
+
+    const targetMinBuyers = req.body.targetMinBuyers || target;
+    const selectedTierPrice = price;
+
+    // Ensure database deal record has targetMembers populated to prevent Mongoose schema validation failure
+    if (!deal.targetMembers) {
+      deal.targetMembers = target;
+    }
+
+    if (deal.joinedUsers >= deal.targetMembers) {
+      return res.status(400).json({ success: false, message: "Deal is already full" });
+    }
+
+    // Reject request if target milestone is already completed/locked
     if (deal.joinedUsers >= Number(targetMinBuyers)) {
       return res.status(400).json({
         success: false,
@@ -146,7 +170,7 @@ exports.joinDeal = async (req, res, next) => {
     // Check if user already joined this deal
     if (!deal.participants) deal.participants = [];
     const alreadyJoined = deal.participants.some(
-      (p) => p.user && p.user.toString() === req.user.id.toString()
+      (p) => (p.user && p.user.toString() === userId.toString()) || p.toString() === userId.toString()
     );
     if (alreadyJoined) {
       return res.status(400).json({
@@ -155,12 +179,12 @@ exports.joinDeal = async (req, res, next) => {
       });
     }
 
-    deal.participants.push({ user: req.user.id, joinedAt: new Date() });
+    deal.participants.push({ user: userId, joinedAt: new Date() });
     deal.joinedUsers = deal.participants.length;
 
     // Create pledged Order
     const newOrder = await Order.create({
-      buyer: req.user.id,
+      buyer: userId,
       deal: deal._id,
       product: deal.product || null,
       selectedTierPrice: Number(selectedTierPrice),
@@ -214,10 +238,8 @@ exports.joinDeal = async (req, res, next) => {
 
     return res.status(200).json({ success: true, message, deal: obj, order: refreshedOrder, poolReset });
   } catch (error) {
-    if (typeof next === "function") {
-      return next(error);
-    }
-    return res.status(500).json({ success: false, message: error.message || "Failed to join deal" });
+    // 5. Ensure the response returns JSON on failure
+    return res.status(400).json({ success: false, message: error.message || "Failed to join deal" });
   }
 };
 
