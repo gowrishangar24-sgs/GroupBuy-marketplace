@@ -112,44 +112,23 @@ function ProductDetails() {
   };
 
   const handleProceedToCheckout = () => {
-    if (!requireLogin("order a deal")) return;
-    const userId = user?._id || user?.id;
-    const alreadyJoined =
-      Boolean(userId) &&
-      Array.isArray(item?.participants) &&
-      item.participants.some(
-        (p) =>
-          p.user === userId ||
-          p.user?._id === userId ||
-          p.user?.id === userId ||
-          p === userId ||
-          (typeof p.user === "string" && p.user === userId?.toString()) ||
-          (p.user?._id && p.user._id.toString() === userId?.toString())
-      );
-    if (alreadyJoined) {
-      alert("You have already ordered this deal!");
-      return;
-    }
-    if (!selectedTier) {
-      alert("Please select an unlocked milestone pricing tier");
-      return;
-    }
+    if (!requireLogin("proceed to checkout")) return;
 
-    const targetMembers = Number(selectedTier?.minUsers || selectedTier?.targetMembers || selectedTier?.targetMinBuyers || item?.targetMembers || 5);
-    const selectedPrice = Number(selectedTier?.price || item?.groupPrice || item?.originalPrice);
+    const deal = item;
+    const targetMembers = Number(selectedTier?.minUsers || deal?.targetMembers || 5);
+    const price = Number(selectedTier?.price || deal?.price || deal?.discountPrice || deal?.groupPrice || deal?.originalPrice);
 
     navigate("/checkout", {
       state: {
-        dealId: item._id,
-        title: item.title,
-        image: item.image,
-        price: selectedPrice,
-        selectedPrice,
+        dealId: deal._id,
+        title: deal.title || deal.name,
+        price: price,
+        originalPrice: deal.originalPrice,
+        image: deal.image || deal.imageUrl || deal.images?.[0],
+        targetMembers: targetMembers,
+        tierId: selectedTier?._id || null,
         selectedTier,
-        tierId: selectedTier?._id || selectedTier?.id,
-        targetMembers,
-        originalPrice: item.originalPrice,
-        item,
+        selectedPrice: price,
       },
     });
   };
@@ -579,82 +558,41 @@ function ProductDetails() {
               </div>
 
               {(() => {
-                const currentTarget = selectedTier 
-                  ? (selectedTier.minUsers || selectedTier.targetMinBuyers || item?.targetMembers || 1) 
-                  : (item?.targetMembers || 1);
+                let btnText = "Proceed to Checkout";
+                let btnClass = "btn-success shadow";
+                let btnDisabled = false;
 
-                const progressPercentage = Math.min(
-                  100, 
-                  Math.round(((item?.joinedUsers || 0) / currentTarget) * 100)
-                );
-                const isTargetReached = (item?.joinedUsers || 0) >= currentTarget;
+                const isDealCompleted = (joinedUsers > 0) && (item.status === "completed" || isFull);
+                const isDealActive = !item.status || item.status === "active" || item.status === "open";
+
+                if (isDealCompleted) {
+                  btnText = "🔒 Deal Completed";
+                  btnClass = "btn-secondary";
+                  btnDisabled = true;
+                } else if (!isDealActive) {
+                  btnText = "🔒 Deal Closed";
+                  btnClass = "btn-secondary";
+                  btnDisabled = true;
+                } else if (Array.isArray(item?.tiers) && item.tiers.length > 0 && !selectedTier) {
+                  btnText = "Select a Tier to Proceed";
+                  btnClass = "btn-secondary";
+                  btnDisabled = true;
+                } else {
+                  btnText = "Proceed to Checkout";
+                  btnClass = "btn-success shadow";
+                  btnDisabled = false;
+                }
 
                 return (
-                  <div className="mb-4">
-                    <div className="d-flex justify-content-between mb-2">
-                      <span className="fw-bold text-secondary">
-                        👥 Current Progress: <strong className="text-dark">{joinedUsers} / {currentTarget} buyers joined</strong>
-                      </span>
-                      <span className="text-muted">{progressPercentage}%</span>
-                    </div>
-                    <div className="progress mb-2" style={{ height: "16px", borderRadius: "20px" }}>
-                      <div
-                        className={`progress-bar progress-bar-striped progress-bar-animated ${
-                          isTargetReached ? "bg-success" : "bg-primary bg-gradient"
-                        }`}
-                        style={{ width: `${progressPercentage}%` }}
-                      />
-                    </div>
-                  </div>
+                  <button
+                    className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${btnClass}`}
+                    onClick={handleProceedToCheckout}
+                    disabled={btnDisabled}
+                  >
+                    {btnText}
+                  </button>
                 );
               })()}
-{(() => {
-  let btnText = "";
-  let btnClass = "";
-  let btnDisabled = false;
-
-  // 1. Only consider completed if participants actually exist (> 0)
-  const isDealCompleted = (joinedUsers > 0) && (item.status === "completed" || isFull);
-
-  // 2. Accept both "active" and "open" (and fallback if status is omitted)
-  const isDealActive = !item.status || item.status === "active" || item.status === "open";
-
-  if (joining) {
-    btnText = "Processing...";
-    btnClass = "btn-secondary";
-    btnDisabled = true;
-  } else if (isDealCompleted) {
-    btnText = "🔒 Deal Completed • Orders Placed";
-    btnClass = "btn-secondary";
-    btnDisabled = true;
-  } else if (hasJoined && joinedUsers > 0) {
-    btnText = "✓ Order Placed";
-    btnClass = "btn-success";
-    btnDisabled = true;
-  } else if (!isDealActive) {
-    btnText = "🔒 Deal Closed";
-    btnClass = "btn-secondary";
-    btnDisabled = true;
-  } else if (!selectedTier) {
-    btnText = "Select a Tier to Order";
-    btnClass = "btn-secondary";
-    btnDisabled = true;
-  } else {
-    btnText = `Order Now at ₹${selectedTier.price?.toLocaleString("en-IN")}`;
-    btnClass = "btn-success shadow";
-    btnDisabled = false;
-  }
-
-  return (
-    <button
-      className={`btn btn-lg w-100 py-3 fw-bold rounded-3 mb-3 ${btnClass}`}
-      onClick={handleProceedToCheckout}
-      disabled={btnDisabled}
-    >
-      {btnText}
-    </button>
-  );
-})()}
             </div>
           </div>
         </div>
