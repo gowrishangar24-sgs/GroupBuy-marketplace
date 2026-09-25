@@ -136,18 +136,22 @@ function ProductDetails() {
     }
     setJoining(true);
 
-    const targetMembers =
-      selectedTier?.minUsers ||
-      selectedTier?.targetMinBuyers ||
-      selectedTier?.targetMembers ||
-      item?.targetMembers ||
-      1;
+    // 1. Extract target count across all possible property names
+const targetMembers = 
+  selectedTier?.targetMembers || 
+  selectedTier?.minUsers || 
+  selectedTier?.targetMinBuyers || 
+  selectedTier?.minBuyers || 
+  item?.targetMembers || 
+  5; // Fallback to avoid empty payload
 
-    const payload = {
-      selectedTierPrice: selectedTier.price,
-      targetMinBuyers: targetMembers,
-      targetMembers: targetMembers,
-    };
+// 2. Pass it explicitly in your API request
+const payload = {
+  dealId: item._id,
+  tierId: selectedTier?._id || selectedTier?.id,
+  price: selectedTier?.price || item?.price,
+  targetMembers: Number(targetMembers),
+};
 
     try {
       const res = await axios.post(
