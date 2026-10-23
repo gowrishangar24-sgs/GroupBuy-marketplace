@@ -16,8 +16,31 @@ function getActiveTierPrice(deal) {
 exports.createDeal = async (req, res, next) => {
   try {
     const { deadline, daysLeft, ...rest } = req.body;
+
+    // ── Guard: reject non-parseable deadline strings early ───────
+    // A DD-MM-YYYY date string (or any invalid value) produces
+    // `Invalid Date` in JS and causes Mongoose to throw a CastError
+    // with an unhelpful message. We catch it here and return a clean
+    // 400 so the frontend alert always shows a readable explanation.
     const deadlineDate = new Date(deadline);
-    const computedDaysLeft = daysLeft !== undefined ? Number(daysLeft) : computeDaysLeft(deadlineDate);
+    if (!deadline || isNaN(deadlineDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid deadline date. Please provide a valid ISO date string (e.g. 2026-10-31T09:25:00Z).",
+      });
+    }
+
+    if (deadlineDate <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Deadline must be a future date.",
+      });
+    }
+
+    const computedDaysLeft =
+      daysLeft !== undefined ? Number(daysLeft) : computeDaysLeft(deadlineDate);
+
     const deal = await Deal.create({
       ...rest,
       deadline: deadlineDate,
@@ -26,6 +49,7 @@ exports.createDeal = async (req, res, next) => {
       status: "active",
       createdBy: req.user.id,
     });
+
     res.status(201).json({ success: true, message: "Deal created successfully", deal });
   } catch (error) {
     next(error);

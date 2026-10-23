@@ -20,6 +20,7 @@ function CreateDeal() {
   const [formData, setFormData] = useState(emptyForm);
   const [tiers, setTiers] = useState([emptyTier()]);
   const [imagePreview, setImagePreview] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // ── Minimum deadline date: tomorrow ──────────────────────────
@@ -104,34 +105,69 @@ function CreateDeal() {
       return;
     }
 
-    // Convert tier strings to numbers before sending
-    const parsedTiers = tiers.map((t) => ({
-      minUsers: Number(t.minUsers),
+    // ── Fix Date Format (DD-MM-YYYY HH:mm  →  ISO 8601) ─────
+    // The datetime-local input gives "YYYY-MM-DDTHH:MM" which is
+    // already valid, but guard against any DD-MM-YYYY variant.
+    let formattedDeadline = formData.deadline;
+    if (typeof formData.deadline === "string" && formData.deadline.includes("-")) {
+      const parts = formData.deadline.split(/[- :]/);
+      if (parts[0].length === 2) {
+        // DD-MM-YYYY[ HH:mm] format
+        const [day, month, year, hour = "00", minute = "00"] = parts;
+        formattedDeadline = new Date(
+          `${year}-${month}-${day}T${hour}:${minute}:00Z`
+        ).toISOString();
+      } else {
+        // Already YYYY-MM-DD… – let the Date constructor handle it
+        formattedDeadline = new Date(formData.deadline).toISOString();
+      }
+    }
+
+    // ── Tier normalisation ────────────────────────────────────
+    // Accept either `minUsers` (our field) or legacy `members` key
+    const formattedTiers = tiers.map((t) => ({
+      minUsers: Number(t.minUsers || t.members || 5),
       price: Number(t.price),
     }));
 
     // Auto-compute targetMembers from the highest tier requirement
-    const computedTargetMembers = tiers && tiers.length > 0
-      ? Math.max(...tiers.map((t) => Number(t.minUsers || t.targetMinBuyers) || 0))
-      : 1;
+    const computedTargetMembers =
+      formattedTiers.length > 0
+        ? Math.max(...formattedTiers.map((t) => t.minUsers))
+        : 1;
 
+    // Top-level `price` mirrors the first (entry) tier group price
+    const entryPrice = formattedTiers[0]?.price ?? Number(formData.originalPrice);
+
+    setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
         "/deals/create",
-        { ...formData, targetMembers: computedTargetMembers, tiers: parsedTiers },
+        {
+          ...formData,
+          deadline: formattedDeadline,
+          targetMembers: computedTargetMembers,
+          tiers: formattedTiers,
+          price: entryPrice,
+          title: formData.title,
+          description: formData.description,
+          originalPrice: Number(formData.originalPrice),
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log(res.data);
-      alert("Deal Created Successfully!");
+      alert("Deal launched successfully!");
       setFormData(emptyForm);
       setImagePreview("");
       setTiers([emptyTier()]);
-      navigate("/MyDeals");
+      const dealId = res.data?.deal?._id || res.data?._id;
+      navigate(dealId ? `/product/${dealId}` : "/");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Error Creating Deal");
+      alert(err.response?.data?.message || err.message || "Error creating deal");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -424,8 +460,20 @@ function CreateDeal() {
             <button
               type="submit"
               className="btn btn-success w-100 btn-lg shadow-sm"
+              disabled={isSubmitting}
             >
-              Launch Group Deal
+              {isSubmitting ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                  Launching...
+                </>
+              ) : (
+                "Launch Group Deal"
+              )}
             </button>
           </form>
         </div>
