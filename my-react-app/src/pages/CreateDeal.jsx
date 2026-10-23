@@ -139,9 +139,18 @@ function CreateDeal() {
     // Top-level `price` mirrors the first (entry) tier group price
     const entryPrice = formattedTiers[0]?.price ?? Number(formData.originalPrice);
 
+    // ── Pre-flight: verify a token exists before attempting the request ───
+    // Avoids firing an authenticated request with an empty Authorization header
+    // and gives the user a clear, actionable message instead of a cryptic error.
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to create a deal. Redirecting to login...");
+      navigate("/login");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("token");
       const res = await axios.post(
         "/deals/create",
         {

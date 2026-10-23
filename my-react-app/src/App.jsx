@@ -9,6 +9,47 @@ axios.defaults.baseURL = rawBase
   : "/api";
 axios.defaults.withCredentials = true;
 
+// ── Global 401 / session-expiry interceptor ────────────────────────────────
+// Every page in this app uses the global `axios` instance (defaults are set
+// above), so registering the interceptor here covers the entire app without
+// having to touch individual files.
+axios.interceptors.response.use(
+  // Pass successful responses straight through
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const message = (
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      ""
+    ).toLowerCase();
+
+    const isTokenError =
+      status === 401 ||
+      message.includes("token") ||
+      message.includes("expired") ||
+      message.includes("unauthorized") ||
+      message.includes("invalid signature");
+
+    if (isTokenError) {
+      // Clear stale credentials
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // Only alert + redirect when we are NOT already on the login page
+      // to avoid an infinite redirect loop.
+      if (!window.location.pathname.startsWith("/login")) {
+        alert("Session expired. Please log in again.");
+        window.location.href = "/login";
+      }
+    }
+
+    // Re-throw so individual catch blocks can still inspect the error
+    return Promise.reject(error);
+  }
+);
+
 // Page Imports
 import Home from "./pages/Home";
 import Login from "./pages/Login";
